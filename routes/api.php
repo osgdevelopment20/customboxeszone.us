@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\HomePageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-
+use App\Http\Controllers\DeployController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,9 +18,15 @@ use Illuminate\Support\Facades\Artisan;
 |
 */
 
+// Trigger a git pull of the latest code. Protected by the DEPLOY_SECRET.
+Route::post('/deploy/pull', [DeployController::class, 'pull'])->name('deploy.pull');
+
+
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
 
 Route::group(['prefix' => 'v1'], function () {
 
