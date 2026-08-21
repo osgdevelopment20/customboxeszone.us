@@ -1,0 +1,24 @@
+@charset "UTF-8";
+/*
+Custom Boxes Zone - Main CSS File
+Optimized for Vite
+*/
+
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* Import Font Awesome from CDN */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css");
+
+/* Custom styles for Vite integration */
+:root {
+  --primary-color: #405189;
+  --secondary-color: #6d7080;
+  --accent-color: #f3f3f9;
+  --text-color: #495057;
+  --border-color: #e9ebec;
+  --white: #fff;
+  --black: #000;
+}
+
+/* Add any additional custom styles here */
