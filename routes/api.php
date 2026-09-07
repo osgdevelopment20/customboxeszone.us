@@ -20,6 +20,8 @@ use App\Http\Controllers\DeployController;
 
 // Trigger a git pull of the latest code. Protected by the DEPLOY_SECRET.
 Route::post('/deploy/pull', [DeployController::class, 'pull'])->name('deploy.pull');
+// Report what the deploy would do, without changing anything. Same secret.
+Route::post('/deploy/status', [DeployController::class, 'status'])->name('deploy.status');
 
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {

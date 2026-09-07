@@ -108,7 +108,7 @@ class PagesController extends Controller
             );
         }
 
-        $sitemap->writeToFile(public_path('mysitemap.xml'));
+        $sitemap->writeToFile(public_path('sitemap.xml'));
     }
 
     private function generateImageSitemap()

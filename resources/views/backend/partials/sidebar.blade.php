@@ -174,6 +174,14 @@
 
                 @can('generate-sitemap')
                 <li class="nav-item">
+                    <a class="nav-link menu-link {{request()->routeIs('dashboard.google-indexing.*')  ? 'active': ''}}" href="{{route('dashboard.google-indexing.index')}}">
+                        <i class="ri-google-line"></i> <span data-key="t-widgets">Google Indexing API</span>
+                    </a>
+                </li>
+                @endcan
+
+                @can('generate-sitemap')
+                <li class="nav-item">
                     <a class="nav-link menu-link" target="_blank" href="{{route('sitemap.xml')}}">
                         <i class="ri-honour-line"></i> <span data-key="t-widgets">Generate Sitemap</span>
                     </a>

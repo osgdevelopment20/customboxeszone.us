@@ -16,6 +16,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+
+        // Push recently changed URLs to the Google Indexing API once a day.
+        if (config('google-indexing.schedule.enabled')) {
+            $schedule->command('google:index', [
+                '--source' => config('google-indexing.schedule.source', 'database'),
+                '--since'  => config('google-indexing.schedule.since', 2),
+                '--limit'  => config('google-indexing.schedule.limit', 200),
+            ])->dailyAt(config('google-indexing.schedule.time', '03:00'))->withoutOverlapping();
+        }
     }
 
     /**

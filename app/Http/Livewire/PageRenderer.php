@@ -10,6 +10,7 @@ use Artesaos\SEOTools\Facades\SEOTools;
 use Artesaos\SEOTools\Facades\TwitterCard;
 use Illuminate\Support\Facades\Log;
 use Spatie\SchemaOrg\Schema;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use DateTime;
 
 class PageRenderer extends Component
@@ -134,6 +135,10 @@ class PageRenderer extends Component
             }
 
             abort(404);
+        } catch (HttpExceptionInterface $e) {
+            // Our own abort() calls land here: an unknown slug is an ordinary
+            // 404, not an application error, so it must not be logged.
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error in PageRenderer', [
                 'message' => $e->getMessage(),

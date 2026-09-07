@@ -23,6 +23,8 @@ use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\GoogleReviewsScraperController;
 use App\Http\Controllers\Admin\GoogleMapsDataController;
+use App\Http\Controllers\Admin\GoogleIndexingController;
+use App\Http\Controllers\DeployController;
 use App\Http\Controllers\Backend\CbdCategoryController;
 use App\Http\Controllers\frontend\indexController;
 use App\Http\Controllers\Backend\LogoController;
@@ -474,6 +476,18 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::get('/raw-data', [GoogleMapsDataController::class, 'getRawData'])->name('raw-data');
     });
 
+    // Google Search Indexing (bulk URL submission) Routes
+    Route::group(['prefix' => 'google-indexing', 'as' => 'google-indexing.'], function () {
+        Route::get('/', [GoogleIndexingController::class, 'index'])->name('index');
+        Route::post('/settings', [GoogleIndexingController::class, 'saveSettings'])->name('settings');
+        Route::get('/credentials/delete', [GoogleIndexingController::class, 'deleteCredentials'])->name('credentials.delete');
+        Route::post('/test', [GoogleIndexingController::class, 'testConnection'])->name('test');
+        Route::post('/collect', [GoogleIndexingController::class, 'collect'])->name('collect');
+        Route::post('/submit', [GoogleIndexingController::class, 'submit'])->name('submit');
+        Route::post('/status', [GoogleIndexingController::class, 'status'])->name('status');
+        Route::post('/clear-logs', [GoogleIndexingController::class, 'clearLogs'])->name('clear-logs');
+    });
+
 });
 
 // Public routes for Google Maps data (no authentication required)
@@ -487,6 +501,14 @@ Route::get('/admin/google-reviews/cron-fetch', [GoogleReviewController::class, '
 
 // Review detail page route
 Route::get('/review/{id}', [App\Http\Controllers\frontend\ReviewController::class, 'show'])->name('review.detail');
+
+// The dashboard "Pull latest Code" button. Authorisation is the logged-in
+// session plus the "pull-code" permission - the previous version compared a
+// query token against env('GIT_PULL_TOKEN'), which returns null once the
+// config is cached, so a request carrying no token at all passed the check.
+Route::get('/git-pull', [DeployController::class, 'pullFromDashboard'])
+    ->middleware(['auth', 'can:pull-code'])
+    ->name('git.pull');
 
 Route::middleware(['schemaOrg'])->group(function() {
     Route::get('/', [indexController::class, 'index'])->name('index');
@@ -538,7 +560,14 @@ Route::middleware(['schemaOrg'])->group(function() {
     Route::get('optimize-clear', [PagesController::class, 'OptimizeClear'])->name('optimize.clear');
 
 
+    // Catch-all page renderer. The constraints keep static-asset requests
+    // (/assets/..., /storage/..., anything ending in .jpg/.css/...) out of
+    // Livewire: those can never be a real slug, and routing them here booted
+    // a component and ran queries just to 404. No slug contains a ".".
     Route::get('{slug}/{pagePrefix?}/{pageNumber?}', PageRenderer::class)
+        ->where('slug', '^(?!(assets|storage|build|vendor|css|js|fonts|images|img|media|uploads)$)[^.]+$')
+        ->where('pagePrefix', '^[^.]+$')
+        ->where('pageNumber', '^[^.]+$')
         ->name('page');
 
 });
@@ -549,20 +578,6 @@ Route::post('/text-editor/image-upload', [EditorImageController::class, 'upload'
 
 
 
-Route::get('/git-pull', function () {
-    if (request()->query('token') !== env('GIT_PULL_TOKEN')) {
-        abort(403, 'Unauthorized');
-    }
-
-    $output = [];
-    $status = null;
-    exec('git pull 2>&1', $output, $status);
-
-    return response()->json([
-        'status' => $status === 0 ? 'success' : 'error',
-        'output' => $output
-    ]);
-})->name('git.pull');
 
 
 Route::get('/storage-link', function () {
