@@ -29,11 +29,17 @@
                                 </div>
                             </div>
                             <div class="single-content">
-                               {!! sys_settings('contact_us') !!}
+                               {!! merchant_policy_content('contact_us', '
+                                   <p>Questions about a custom packaging quote, artwork, production, shipping, or an existing order? Contact our support team and we will help you confirm the details before you place an order.</p>
+                                   <p>Email: <a href="mailto:' . merchant_contact_email() . '">' . merchant_contact_email() . '</a></p>
+                                   <p>Phone: <a href="tel:' . merchant_contact_phone() . '">' . merchant_contact_phone() . '</a></p>
+                                   <p>Address: ' . sys_settings('address', 'East Meadow, NY 11554, USA') . '</p>
+                               ') !!}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+        @include('frontend.includes.merchant-transparency')
     @endsection

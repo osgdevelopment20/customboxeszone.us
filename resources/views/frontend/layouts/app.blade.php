@@ -40,7 +40,7 @@
     <!-- CSS Assets - non-blocking load -->
     <!--<link rel="preload" href="{{ asset('assets/css/main.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">-->
     <!--<noscript><link rel="stylesheet" href="{{ asset('assets/css/main.min.css') }}"></noscript>-->
-    
+
     <link rel="stylesheet" href="{{ asset('assets/css/main.min.css') }}">
     <!-- Cart, checkout, product enquiry and browse screens -->
     <link rel="stylesheet" href="{{ asset('assets/css/cart-checkout.css') }}">
@@ -105,40 +105,6 @@ img[loading="lazy"]{background-color:#f0f0f0}
     @include('frontend.includes.scripts')
     @stack('scripts')
     @livewireScripts
-
-    <!-- Lazy loading script - moved to bottom for better FCP -->
-    <!--<script data-cfasync="false">-->
-    <!--    document.addEventListener("DOMContentLoaded", function() {-->
-    <!--        var lazyImages = [].slice.call(document.querySelectorAll("img.lazy, img[data-src]")).filter(function(img){-->
-    <!--            return !img.dataset.critical;-->
-    <!--        });-->
-
-    <!--        if ("IntersectionObserver" in window) {-->
-    <!--            let lazyImageObserver = new IntersectionObserver(function(entries, observer) {-->
-    <!--                entries.forEach(function(entry) {-->
-    <!--                    if (entry.isIntersecting) {-->
-    <!--                        let lazyImage = entry.target;-->
-    <!--                        lazyImage.src = lazyImage.dataset.src;-->
-    <!--                        if (lazyImage.dataset.srcset) {-->
-    <!--                            lazyImage.srcset = lazyImage.dataset.srcset;-->
-    <!--                        }-->
-    <!--                        lazyImage.classList.remove("lazy");-->
-    <!--                        lazyImageObserver.unobserve(lazyImage);-->
-    <!--                    }-->
-    <!--                });-->
-    <!--            });-->
-    <!--            lazyImages.forEach(function(lazyImage) {-->
-    <!--                lazyImageObserver.observe(lazyImage);-->
-    <!--            });-->
-    <!--        } else {-->
-                // Fallback for old browsers
-    <!--            lazyImages.forEach(function(lazyImage) {-->
-    <!--                lazyImage.src = lazyImage.dataset.src;-->
-    <!--                if (lazyImage.dataset.srcset) lazyImage.srcset = lazyImage.dataset.srcset;-->
-    <!--            });-->
-    <!--        }-->
-    <!--    });-->
-    <!--</script>-->
 
     <!-- Google Analytics - single deferred load -->
     <script data-cfasync="false">

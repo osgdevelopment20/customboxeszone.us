@@ -49,9 +49,7 @@ class PagesController extends Controller
             $this->addDynamicUrls();
             // Generate and save the image sitemap
             $this->generateImageSitemap();
-            // Generate and save the Google Merchant feed
             $this->generateGoogleMerchantFeed();
-            // Generate and save the Google Local Merchant feed
             $this->generateGoogleMerchantLocalFeed();
 
             return view('frontend.pages.sitemap');
@@ -76,14 +74,15 @@ class PagesController extends Controller
             ->add(Url::create(route('faq'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
             ->add(Url::create(route('search'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
             ->add(Url::create(route('allcategories'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
-            ->add(Url::create(route('refundPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
+            ->add(Url::create(route('refundPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
+            ->add(Url::create(route('shippingPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
 
         // Add products
         $items = Product::active()->select(['slug', 'updated_at'])->get();
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('page', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
@@ -93,7 +92,7 @@ class PagesController extends Controller
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('page', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
@@ -103,12 +102,17 @@ class PagesController extends Controller
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('blog.detail', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
 
         $sitemap->writeToFile(public_path('sitemap.xml'));
+    }
+
+    private function lastModifiedDate($value): DateTime
+    {
+        return new DateTime($value ?: 'now');
     }
 
     private function generateImageSitemap()
@@ -158,94 +162,29 @@ class PagesController extends Controller
 
     private function generateGoogleMerchantFeed()
     {
-        // Fetch products with required attributes and their associated media
-        $items = Product::with('media')->active()->select(['id', 'product_title', 'product_detail', 'slug'])->get();
-
-        // Start building the XML content
         $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>
          <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
          <channel>
-            <title>' . htmlspecialchars(sys_settings('site_meta_title')) . '</title>
-            <link>' . config('app.url') . '</link>
-            <description>' . htmlspecialchars(sys_settings('site_meta_description')) . '</description>';
-
-        // Loop through each product and add it to the feed
-        foreach ($items as $item) {
-            // Remove HTML tags and convert HTML entities to plain text
-            // Limit to 500 chars to prevent blog-style content
-            $plainTextDescription = html_entity_decode(strip_tags($item->product_detail));
-            $plainTextDescription = mb_substr($plainTextDescription, 0, 500);
-
-            $xmlContent .= '
-            <item>
-            <g:id>' . $item->id . '</g:id>
-            <g:title>' . htmlspecialchars($item->product_title) . '</g:title>
-            <g:description>' . htmlspecialchars($plainTextDescription) . '</g:description>
-            <g:link>' . htmlspecialchars(route('page', $item->slug)) . '</g:link>
-            <g:image_link>' . htmlspecialchars($item->media->first()->getUrl()) . '</g:image_link>';
-
-            // Add additional images if available
-            if ($item->media->count() > 1) {
-                foreach ($item->media->slice(1) as $media) {
-                    $xmlContent .= '
-            <g:additional_image_link>' . htmlspecialchars($media->getUrl()) . '</g:additional_image_link>';
-                }
-            }
-
-            $xmlContent .= '
-            <g:condition>new</g:condition>
-            <g:availability>in stock</g:availability>
-            <g:price>1.50 USD</g:price>
-            <g:brand>' . htmlspecialchars(config('app.name')) . '</g:brand>
-            <g:google_product_category>Business &amp; Industrial &gt; Packaging Materials &gt; Boxes</g:google_product_category>
-            <g:identifier_exists>no</g:identifier_exists>
-            <g:shipping>
-              <g:country>US</g:country>
-              <g:service>Standard Shipping</g:service>
-              <g:price>0 USD</g:price>
-            </g:shipping>
-          </item>';
-        }
-
-          // Close the XML content
-           $xmlContent .= '
+            <title>' . htmlspecialchars(sys_settings('site_meta_title', config('app.name'))) . '</title>
+            <link>' . htmlspecialchars(config('app.url')) . '</link>
+            <description>' . htmlspecialchars('Merchant feed disabled until accurate fixed product prices are available on matching landing pages.') . '</description>
           </channel>
          </rss>';
 
-        // Save the Google Merchant feed to the public directory
         \File::put(public_path('google-merchant-feed.xml'), $xmlContent);
     }
 
     private function generateGoogleMerchantLocalFeed()
     {
-        // Fetch products with minimal required attributes
-        $items = Product::active()->select(['id'])->get();
-
-        // Start building the XML content
         $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>
          <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
            <channel>
           ' . '<title>' . htmlspecialchars(config('app.name') . ' | Local Inventory') . '</title>
             <link>' . htmlspecialchars(config('app.url')) . '</link>
-             <description>' . htmlspecialchars('Local inventory feed for ' . config('app.name') . ' stores in USA') . '</description>';
-
-        // Loop through each product and add it to the feed
-        foreach ($items as $item) {
-            $xmlContent .= '
-        <item>
-            <g:id>' . $item->id . '</g:id>
-            <g:store_code>UB-USA</g:store_code>
-            <g:availability>in stock</g:availability>
-            <g:price>1.50 USD</g:price>
-        </item>';
-        }
-
-        // Close the XML content
-        $xmlContent .= '
+             <description>' . htmlspecialchars('Local inventory feed disabled until accurate local inventory prices are available.') . '</description>
     </channel>
 </rss>';
 
-        // Save the Local feed to the public directory
         \File::put(public_path('google-merchant-local-feed.xml'), $xmlContent);
     }
 
@@ -902,6 +841,22 @@ class PagesController extends Controller
         return view('frontend.pages.refund-policy');
     }
 
+    public function ReturnPolicy()
+    {
+        return redirect()->route('refundPolicy', status: 301);
+    }
+
+    public function ShippingPolicy()
+    {
+        $this->seoMetaData(
+            sys_settings('shipping_policy_meta_title', 'Shipping Policy | ' . config('app.name')),
+            sys_settings('shipping_policy_meta_description', 'Shipping timelines, production handling, delivery areas, and freight notes for custom packaging orders.'),
+            sys_settings('meta_site_keywords'),
+            route('shippingPolicy')
+        );
+        return view('frontend.pages.shipping-policy');
+    }
+
     public function ContactUs()
     {
         $this->seoMetaData(
@@ -1374,4 +1329,3 @@ class PagesController extends Controller
 
 
 }
-

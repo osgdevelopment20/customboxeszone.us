@@ -71,11 +71,7 @@ class Product extends Model implements HasMedia
 
     public function getSchemaOrgAttribute()
     {
-        $rating = Schema::aggregateRating()
-            ->ratingValue(5)
-            ->bestRating(5)
-            ->worstRating(1)
-            ->ratingCount(4.9);
+        $image = asset('og_image.jpeg');
 
         foreach ($this->getMedia('product_front_image') as $media) {
             $image = $media->getUrl('l');
@@ -89,18 +85,7 @@ class Product extends Model implements HasMedia
             ->description($this->meta_description)
             ->brand(Schema::brand()->name(config('app.name')))
             ->sku($this->product_name . '_' . $this->id)
-            ->mpn("mpn_{$this->id}")
-            ->offers(
-                Schema::aggregateOffer()
-                    ->offerCount(2)
-                    ->priceCurrency('USD')
-                    ->lowPrice(0.25)
-                    ->highPrice(3.0)
-                    ->url(route('page', $this->slug))
-                    ->priceValidUntil(\Carbon\Carbon::now()->addYear(1)->format('Y-m-d'))
-                    ->availability('http://schema.org/InStock')
-                    ->itemCondition('http://schema.org/NewCondition')
-            )->aggregateRating($rating);
+            ->mpn("mpn_{$this->id}");
 
         return $schema;
     }

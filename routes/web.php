@@ -521,6 +521,8 @@ Route::middleware(['schemaOrg'])->group(function() {
     Route::get('privacy-policy', [PagesController::class, 'SecurityAndPrivacy'])->name('SecurityAndPrivacy');
     Route::get('terms-of-services', [PagesController::class, 'TermsAndCondition'])->name('termsAndCondition');
     Route::get('refund-policy', [PagesController::class, 'refundPolicy'])->name('refundPolicy');
+    Route::get('return-policy', [PagesController::class, 'ReturnPolicy'])->name('returnPolicy');
+    Route::get('shipping-policy', [PagesController::class, 'ShippingPolicy'])->name('shippingPolicy');
     Route::get('contact-us', [PagesController::class, 'ContactUs'])->name('contactUs');
     Route::get('frequently-asked-questions', [PagesController::class, 'FAQ'])->name('faq');
     Route::get('checkout', [PagesController::class, 'GetQuote'])->name('get.quote');
@@ -609,6 +611,4 @@ Route::get('/storage/{id}/{conversion}/{filename}', function ($id, $conversion, 
     
     return response()->file($path);
 })->name('media.show');
-
-
 

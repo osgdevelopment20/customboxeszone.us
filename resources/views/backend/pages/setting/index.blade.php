@@ -346,6 +346,34 @@
                                     @enderror
                                 </div>
 
+                                {{--Shipping Policy--}}
+                                <div class="col-12 mt-3">
+                                    <label for="shipping_policy_meta_title" class="form-label">Shipping Policy Meta Title</label>
+                                    <textarea class="form-control @error('shipping_policy_meta_title') is-invalid @enderror"
+                                              id="shipping_policy_meta_title" placeholder="Shipping Policy Meta Title"
+                                              name="shipping_policy_meta_title">{{sys_settings('shipping_policy_meta_title')}}</textarea>
+                                    @error('shipping_policy_meta_title')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <label for="shipping_policy_meta_description" class="form-label">Shipping Policy Meta Description</label>
+                                    <textarea class="form-control @error('shipping_policy_meta_description') is-invalid @enderror"
+                                              id="shipping_policy_meta_description" placeholder="Shipping Policy Meta Description"
+                                              name="shipping_policy_meta_description">{{sys_settings('shipping_policy_meta_description')}}</textarea>
+                                    @error('shipping_policy_meta_description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <label for="shipping_policy" class="form-label">Shipping Policy</label>
+                                    <x-text-editor name="shipping_policy" :value="sys_settings('shipping_policy')" height="200px" />
+
+                                    @error('shipping_policy')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
 
                     </div>
                         <button type="submit" class="my-4 btn btn-primary" >Save Changes</button>

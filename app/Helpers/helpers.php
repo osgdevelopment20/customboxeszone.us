@@ -50,3 +50,31 @@ if (! function_exists('clear_response_cache')) {
         }
     }
 }
+
+if (! function_exists('merchant_contact_email')) {
+    function merchant_contact_email(): string
+    {
+        return (string) sys_settings('email', 'info@customboxeszone.com');
+    }
+}
+
+if (! function_exists('merchant_contact_phone')) {
+    function merchant_contact_phone(): string
+    {
+        return (string) sys_settings('phone', '(800) 203-6657');
+    }
+}
+
+if (! function_exists('merchant_policy_content')) {
+    function merchant_policy_content(string $key, string $fallback = ''): string
+    {
+        $content = (string) sys_settings($key, $fallback);
+        $contact = merchant_contact_email() . ' or ' . merchant_contact_phone();
+
+        return str_replace(
+            ['[Insert Email/Phone]', '[Insert Email]', '[Insert Phone]'],
+            [$contact, merchant_contact_email(), merchant_contact_phone()],
+            $content
+        );
+    }
+}

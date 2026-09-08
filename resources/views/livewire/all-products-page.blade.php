@@ -5,7 +5,8 @@
             <div>
                 <h1 class="cbz-page__title">All Products</h1>
                 <p class="cbz-page__subtitle">
-                    Browse our full packaging range, pick a box, set your size and quantity — then add it to your cart.
+                    Browse our full packaging range, pick a box, set your size and quantity — then request a custom quote.
+                    Final price, shipping, and production time are confirmed before payment.
                 </p>
             </div>
         </div>
@@ -127,7 +128,7 @@
                                 <a href="{{ route('page', $product->slug) }}">{{ $product->product_name }}</a>
                             </h3>
                             <a href="{{ route('page', $product->slug) }}" class="cbz-prod__cta">
-                                Configure &amp; Order <i class="fi-rs-arrow-small-right" aria-hidden="true"></i>
+                                Configure &amp; Quote <i class="fi-rs-arrow-small-right" aria-hidden="true"></i>
                             </a>
                         </div>
                     </article>

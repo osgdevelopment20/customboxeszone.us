@@ -85,7 +85,7 @@
                                     <button type="submit" class="cbz-btn cbz-btn--primary"
                                             wire:loading.attr="disabled" wire:target="placeOrder">
                                         <span wire:loading.remove wire:target="placeOrder">
-                                            <i class="fi-rs-shield-check" aria-hidden="true"></i> Submit Order
+                                            <i class="fi-rs-shield-check" aria-hidden="true"></i> Submit Quote Request
                                         </span>
                                         <span wire:loading wire:target="placeOrder">
                                             <span class="cbz-spinner" aria-hidden="true"></span> Submitting…
@@ -95,7 +95,8 @@
 
                                 <p class="cbz-privacy">
                                     <i class="fi-rs-lock" aria-hidden="true"></i>
-                                    Your details are used only to prepare your quote. We never share them.
+                                    Your details are used only to prepare your quote. We never share them. Final price,
+                                    shipping cost, production time, and artwork proof are confirmed before payment.
                                 </p>
                             </form>
                         </div>

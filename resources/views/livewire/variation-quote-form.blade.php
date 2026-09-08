@@ -17,7 +17,7 @@
                         @endif
 
                         <div class="alert alert-info">
-                            <small>Please fill in your details to get a quote for this Standard Sizes & Estimated Prices.</small>
+                            <small>Please fill in your details to get a quote for this standard size option. Final price, shipping, and production time are confirmed before payment.</small>
                         </div>
 
                         <div class="mb-3">
