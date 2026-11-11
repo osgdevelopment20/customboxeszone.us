@@ -52,17 +52,8 @@ class SchemaOrg
             ->sameAs($sameAs)
             ->address(
                 Schema::postalAddress()
-                    ->addressLocality('East Meadow')
-                    ->addressRegion('NY')
-                    ->addressCountry('USA')
-                    ->postalCode('11554')
+                    ->addressCountry('US')
                     ->streetAddress(sys_settings('address'))
-            )
-            ->aggregateRating(
-                Schema::aggregateRating()
-                    ->ratingValue(5)
-                    ->ratingCount(37)
-                    ->bestRating(5)
             );
 
         // Local Business Schema
@@ -82,16 +73,8 @@ class SchemaOrg
             )
             ->address(
                 Schema::postalAddress()
-                    ->addressLocality('East Meadow')
-                    ->addressRegion('NY')
-                    ->addressCountry('USA')
-                    ->postalCode('11554')
+                    ->addressCountry('US')
                     ->streetAddress(sys_settings('address'))
-            )
-            ->geo(
-                Schema::geoCoordinates()
-                    ->latitude(40.6317823)
-                    ->longitude(-73.9663371)
             )
             ->paymentAccepted([
                 'Credit Card',

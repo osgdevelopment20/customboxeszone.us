@@ -31,7 +31,7 @@ class CartOrderDataTable extends BaseDataTable
                 ];
                 $class = $classes[$order->status] ?? 'bg-secondary-subtle text-secondary';
 
-                return '<span class="badge ' . $class . '">' . ucfirst($order->status) . '</span>';
+                return '<span class="badge ' . $class . '">' . e(ucfirst($order->status)) . '</span>';
             })
             ->addColumn('action', function ($order) {
                 $action = '<div class="dropdown d-inline-block">';

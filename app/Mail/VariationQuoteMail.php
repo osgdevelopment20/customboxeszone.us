@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\VariationQuote;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -34,6 +35,7 @@ class VariationQuoteMail extends Mailable
     {
         return new Envelope(
             subject: 'New Order Request - ' . $this->variationQuote->name,
+            replyTo: filter_var($this->variationQuote->email, FILTER_VALIDATE_EMAIL) ? [new Address($this->variationQuote->email)] : [],
         );
     }
 

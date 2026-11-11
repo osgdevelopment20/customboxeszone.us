@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\DeployController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -20,15 +21,10 @@ use App\Http\Controllers\DeployController;
 
 // Trigger a git pull of the latest code. Protected by the DEPLOY_SECRET.
 Route::post('/deploy/pull', [DeployController::class, 'pull'])->name('deploy.pull');
-// Report what the deploy would do, without changing anything. Same secret.
-Route::post('/deploy/status', [DeployController::class, 'status'])->name('deploy.status');
-
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-
 
 Route::group(['prefix' => 'v1'], function () {
 
@@ -64,8 +60,11 @@ Route::group(['prefix' => 'v1'], function () {
 
     // Get Quote
 
-    Route::post('get-quote', [FrontendPagesController::class, 'getQuote']);
-    Route::post('contact-us', [FrontendPagesController::class, 'StoreContactUs']);
+    // Public form endpoints: no captcha, and each call writes a row and sends mail.
+    Route::middleware('throttle:5,10')->group(function () {
+        Route::post('get-quote', [FrontendPagesController::class, 'getQuote']);
+        Route::post('contact-us', [FrontendPagesController::class, 'StoreContactUs']);
+    });
 
     // for search
     Route::get('search/{searchWord}', [HomePageController::class, 'Search']);

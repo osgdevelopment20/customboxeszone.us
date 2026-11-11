@@ -81,20 +81,6 @@
                         <a href="{{ route('dashboard.google-reviews.manual-import') }}" class="btn btn-info">
                             <i class="fas fa-upload"></i> Manual Import
                         </a>
-                        
-                        <div class="mt-3">
-                            <h6>Cron Job URL:</h6>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="cronUrl" 
-                                       value="{{ url('/admin/google-reviews/cron-fetch') }}" readonly>
-                                <button class="btn btn-outline-secondary" type="button" onclick="copyCronUrl()">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                            <small class="form-text text-muted">
-                                Use this URL for your cron job to fetch reviews automatically
-                            </small>
-                        </div>
                     </div>
                 </div>
             </div>

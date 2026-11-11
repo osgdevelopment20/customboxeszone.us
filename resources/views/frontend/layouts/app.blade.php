@@ -14,7 +14,8 @@
     <meta http-equiv="x-dns-prefetch-control" content="on">
     <link rel="icon" href="{{asset('favicon.png')}}">
     <link rel="shortcut icon" type="image/x-icon" href="{{asset('favicon.png')}}">
-<meta name="google-site-verification" content="U3RA1S8tX7Yi6dQ_6o2hNGNAWKny5V7yPOT_4Lr-Wgc" />
+
+<meta name="google-site-verification" content="2iqFF6MyIp31jUamRL1T8tgZsO9umOxsy633OgnWrY8" />
 
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,12 +31,49 @@
     <link rel="preload" as="image" href="https://res.cloudinary.com/dhxnzgb0d/image/upload/f_auto,q_auto,w_800/v1749757805/cbz-banner_ciqlmm.jpg" fetchpriority="high" imagesrcset="https://res.cloudinary.com/dhxnzgb0d/image/upload/f_auto,q_auto,w_400/v1749757805/cbz-banner_ciqlmm.jpg 400w, https://res.cloudinary.com/dhxnzgb0d/image/upload/f_auto,q_auto,w_800/v1749757805/cbz-banner_ciqlmm.jpg 800w" imagesizes="(max-width: 768px) 100vw, 75vw">
 
     <!-- Scripts are now loaded in scripts.blade.php -->
-
+    
     @if(isset($schemaWebsite) and isset($schemaOrganization) and isset($schemaBusiness))
         {!! $schemaWebsite->toScript() !!}
         {!! $schemaOrganization->toScript() !!}
         {!! $schemaBusiness->toScript() !!}
     @endif
+    
+    <!-- Google Analytics - single deferred load -->
+    <script data-cfasync="false">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        function loadAnalytics() {
+            if (window.__gaLoaded) return;
+            window.__gaLoaded = true;
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=G-292914182';
+            s.onload = function() {
+                gtag('js', new Date());
+                gtag('config', 'G-292914182');
+                gtag('config', 'G-TLMSNZERH4');
+            };
+            document.head.appendChild(s);
+        }
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(loadAnalytics, {timeout: 4000});
+        } else {
+            setTimeout(loadAnalytics, 3000);
+        }
+        ['scroll', 'click', 'touchstart'].forEach(function(evt) {
+            window.addEventListener(evt, loadAnalytics, {once: true, passive: true});
+        });
+    </script>
+    
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18420525501"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18420525501');
+</script>
 
     <!-- CSS Assets - non-blocking load -->
     <!--<link rel="preload" href="{{ asset('assets/css/main.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">-->
@@ -105,40 +143,6 @@ img[loading="lazy"]{background-color:#f0f0f0}
     @include('frontend.includes.scripts')
     @stack('scripts')
     @livewireScripts
-
-    <!-- Lazy loading script - moved to bottom for better FCP -->
-    <!--<script data-cfasync="false">-->
-    <!--    document.addEventListener("DOMContentLoaded", function() {-->
-    <!--        var lazyImages = [].slice.call(document.querySelectorAll("img.lazy, img[data-src]")).filter(function(img){-->
-    <!--            return !img.dataset.critical;-->
-    <!--        });-->
-
-    <!--        if ("IntersectionObserver" in window) {-->
-    <!--            let lazyImageObserver = new IntersectionObserver(function(entries, observer) {-->
-    <!--                entries.forEach(function(entry) {-->
-    <!--                    if (entry.isIntersecting) {-->
-    <!--                        let lazyImage = entry.target;-->
-    <!--                        lazyImage.src = lazyImage.dataset.src;-->
-    <!--                        if (lazyImage.dataset.srcset) {-->
-    <!--                            lazyImage.srcset = lazyImage.dataset.srcset;-->
-    <!--                        }-->
-    <!--                        lazyImage.classList.remove("lazy");-->
-    <!--                        lazyImageObserver.unobserve(lazyImage);-->
-    <!--                    }-->
-    <!--                });-->
-    <!--            });-->
-    <!--            lazyImages.forEach(function(lazyImage) {-->
-    <!--                lazyImageObserver.observe(lazyImage);-->
-    <!--            });-->
-    <!--        } else {-->
-                // Fallback for old browsers
-    <!--            lazyImages.forEach(function(lazyImage) {-->
-    <!--                lazyImage.src = lazyImage.dataset.src;-->
-    <!--                if (lazyImage.dataset.srcset) lazyImage.srcset = lazyImage.dataset.srcset;-->
-    <!--            });-->
-    <!--        }-->
-    <!--    });-->
-    <!--</script>-->
 
     <!-- Google Analytics - single deferred load -->
     <script data-cfasync="false">

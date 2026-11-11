@@ -33,6 +33,6 @@ class SendEmailJob implements ShouldQueue
      */
     public function handle()
     {
-        Mail::to('quote@cusotmboxeszone.com')->send(new OrderMail($this->order));
+        Mail::to(config('app.to_mail'))->send(new OrderMail($this->order));
     }
 }

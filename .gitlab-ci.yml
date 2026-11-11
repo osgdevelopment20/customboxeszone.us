@@ -17,9 +17,11 @@ image: php:latest
 services:
   - mysql:latest
 
+# Throwaway database inside the CI container only - never put real
+# production names or passwords here.
 variables:
-  MYSQL_DATABASE: u760202362_cbc
-  MYSQL_ROOT_PASSWORD: Cbc11!!@@
+  MYSQL_DATABASE: testing
+  MYSQL_ROOT_PASSWORD: secret
 
 # This folder is cached between builds
 # https://docs.gitlab.com/ee/ci/yaml/#cache

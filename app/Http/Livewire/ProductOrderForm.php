@@ -9,6 +9,7 @@ use App\Models\Quote;
 use App\Services\CartService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Livewire\Concerns\ThrottlesSubmissions;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -21,7 +22,7 @@ use Livewire\WithFileUploads;
  */
 class ProductOrderForm extends Component
 {
-    use WithFileUploads, DetectsVisitorLocation;
+    use WithFileUploads, DetectsVisitorLocation, ThrottlesSubmissions;
 
     public $productId;
     public $productName;
@@ -92,6 +93,7 @@ class ProductOrderForm extends Component
         $this->validate(array_merge($this->rules(), [
             'email' => 'required|email|max:255',
         ]));
+        $this->throttleSubmission();
 
         try {
             $quote = new Quote();
@@ -185,8 +187,7 @@ class ProductOrderForm extends Component
 
         foreach ($this->artwork as $file) {
             try {
-                $fileName = uniqid('artwork_', true) . '.' . $file->getClientOriginalExtension();
-                $paths[] = $file->storeAs('artwork', $fileName, 'public');
+                $paths[] = store_artwork_upload($file);
             } catch (\Exception $e) {
                 Log::error('Artwork upload failed: ' . $e->getMessage());
             }

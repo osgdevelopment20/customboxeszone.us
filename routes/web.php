@@ -23,7 +23,6 @@ use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\GoogleReviewsScraperController;
 use App\Http\Controllers\Admin\GoogleMapsDataController;
-use App\Http\Controllers\Admin\GoogleIndexingController;
 use App\Http\Controllers\DeployController;
 use App\Http\Controllers\Backend\CbdCategoryController;
 use App\Http\Controllers\frontend\indexController;
@@ -54,7 +53,8 @@ use App\Http\Controllers\Backend\CartOrderController;
 //    return view('welcome');
 //});
 
-Auth::routes();
+// Registration is closed: dashboard accounts are created by an admin under Users.
+Auth::routes(['register' => false]);
 
 // Generic redirect routes - just add slug mappings to the array
 $redirects = [
@@ -69,7 +69,7 @@ foreach ($redirects as $from => $to) {
 }
 
 
-// Temporary route to fix cache and storage issues - REMOVE AFTER USE
+// Admin tool to clear caches and relink storage (sidebar "Fix Cache" link).
 Route::get('/run/cache-command', function () {
     try {
         $results = [];
@@ -134,19 +134,21 @@ Route::get('/run/cache-command', function () {
             'error' => $e->getMessage()
         ], 500);
     }
-})->name('fix.cache');
+})->middleware(['auth', 'dashboard', 'permission:clear-cache'])->name('fix.cache');
 
 
 
-Route::get('cbd-products-export', [CbdController::class, 'exportProducts']);
-Route::post('cbd-products-import', [CbdController::class, 'import'])->name('import');
+Route::middleware(['auth', 'dashboard', 'permission:manage-products'])->group(function () {
+    Route::get('cbd-products-export', [CbdController::class, 'exportProducts']);
+    Route::post('cbd-products-import', [CbdController::class, 'import'])->name('import');
+});
 
-Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashboard', 'middleware' => ['auth']], function () {
+Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashboard', 'middleware' => ['auth', 'dashboard']], function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // marketing-contacts Routes
-    Route::group(['prefix' => 'marketing-contacts', 'as' => 'marketing-contact.'], function () {
+    Route::group(['prefix' => 'marketing-contacts', 'as' => 'marketing-contact.', 'middleware' => 'permission:manage-marketing'], function () {
         Route::get('/', [MarketingController::class, 'index'])->name('index');
         Route::get('/create', [MarketingController::class, 'create'])->name('create');
         Route::post('/store', [MarketingController::class, 'store'])->name('store');
@@ -155,12 +157,12 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{contact}'], function () {
             Route::get('edit', [MarketingController::class, 'edit'])->name('edit');
             Route::post('update', [MarketingController::class, 'update'])->name('update');
-            Route::get('delete', [MarketingController::class, 'delete'])->name('delete');
+            Route::post('delete', [MarketingController::class, 'delete'])->name('delete');
         });
     });
 
     // Campaign Routes
-    Route::group(['prefix' => 'campaigns', 'as' => 'campaign.'], function () {
+    Route::group(['prefix' => 'campaigns', 'as' => 'campaign.', 'middleware' => 'permission:manage-marketing'], function () {
         Route::get('/', [CampaignController::class, 'index'])->name('index');
         Route::get('/create', [CampaignController::class, 'create'])->name('create');
         Route::post('/store', [CampaignController::class, 'store'])->name('store');
@@ -170,7 +172,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{campaign}'], function () {
             Route::get('edit', [CampaignController::class, 'edit'])->name('edit');
             Route::post('update', [CampaignController::class, 'update'])->name('update');
-            Route::get('delete', [CampaignController::class, 'delete'])->name('delete');
+            Route::post('delete', [CampaignController::class, 'delete'])->name('delete');
         });
     });
 
@@ -179,7 +181,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
 
 
     // Banner Routes
-    Route::group(['prefix' => 'banners', 'as' => 'banner.'], function () {
+    Route::group(['prefix' => 'banners', 'as' => 'banner.', 'middleware' => 'permission:manage-banners'], function () {
         Route::get('/', [bannerController::class, 'index'])->name('index');
         Route::get('/create', [bannerController::class, 'create'])->name('create');
         Route::post('/store', [bannerController::class, 'store'])->name('store');
@@ -187,12 +189,12 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{banner}'], function () {
             Route::get('edit', [bannerController::class, 'edit'])->name('edit');
             Route::post('update', [bannerController::class, 'update'])->name('update');
-            Route::get('delete', [bannerController::class, 'delete'])->name('delete');
+            Route::post('delete', [bannerController::class, 'delete'])->name('delete');
         });
     });
 
     // Logo Routes
-    Route::group(['prefix' => 'logos', 'as' => 'logo.'], function () {
+    Route::group(['prefix' => 'logos', 'as' => 'logo.', 'middleware' => 'permission:manage-banners'], function () {
         Route::get('/', [LogoController::class, 'index'])->name('index');
         Route::get('/create', [LogoController::class, 'create'])->name('create');
         Route::post('/store', [LogoController::class, 'store'])->name('store');
@@ -200,7 +202,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{logo}'], function () {
             Route::get('edit', [LogoController::class, 'edit'])->name('edit');
             Route::post('update', [LogoController::class, 'update'])->name('update');
-            Route::get('delete', [LogoController::class, 'delete'])->name('delete');
+            Route::post('delete', [LogoController::class, 'delete'])->name('delete');
         });
     });
     // Profile Routes
@@ -223,7 +225,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
 
 
     // permissions Routes
-    Route::group(['prefix' => 'permissions', 'as' => 'permission.'], function () {
+    Route::group(['prefix' => 'permissions', 'as' => 'permission.', 'middleware' => 'permission:manage-permissions'], function () {
         Route::get('/', [PermissionsController::class, 'index'])->name('index');
         Route::get('/create', [PermissionsController::class, 'create'])->name('create');
         Route::post('/store', [PermissionsController::class, 'store'])->name('store');
@@ -231,13 +233,13 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{permission}'], function () {
             Route::get('edit', [PermissionsController::class, 'edit'])->name('edit');
             Route::post('update', [PermissionsController::class, 'update'])->name('update');
-            Route::get('delete', [PermissionsController::class, 'delete'])->name('delete');
+            Route::post('delete', [PermissionsController::class, 'delete'])->name('delete');
         });
     });
 
 
     // roles Routes
-    Route::group(['prefix' => 'roles', 'as' => 'role.'], function () {
+    Route::group(['prefix' => 'roles', 'as' => 'role.', 'middleware' => 'permission:manage-roles'], function () {
         Route::get('/', [RolesController::class, 'index'])->name('index');
         Route::get('/create', [RolesController::class, 'create'])->name('create');
         Route::post('/store', [RolesController::class, 'store'])->name('store');
@@ -245,19 +247,19 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{role}'], function () {
             Route::get('edit', [RolesController::class, 'edit'])->name('edit');
             Route::post('update', [RolesController::class, 'update'])->name('update');
-            Route::get('delete', [RolesController::class, 'delete'])->name('delete');
+            Route::post('delete', [RolesController::class, 'delete'])->name('delete');
         });
     });
     
       // Cart Orders (multi-item orders placed through the cart / checkout flow)
-    Route::group(['prefix' => 'cart-orders', 'as' => 'cart-orders.'], function () {
+    Route::group(['prefix' => 'cart-orders', 'as' => 'cart-orders.', 'middleware' => 'permission:manage-orders'], function () {
         Route::get('/', [CartOrderController::class, 'index'])->name('index');
         Route::get('/{id}/view', [CartOrderController::class, 'show'])->name('view');
         Route::post('/{id}/status', [CartOrderController::class, 'updateStatus'])->name('status');
     });
 
     // users Routes
-    Route::group(['prefix' => 'users', 'as' => 'user.'], function () {
+    Route::group(['prefix' => 'users', 'as' => 'user.', 'middleware' => 'permission:manage-users'], function () {
         Route::get('/', [UsersController::class, 'index'])->name('index');
         Route::get('/create', [UsersController::class, 'create'])->name('create');
         Route::post('/store', [UsersController::class, 'store'])->name('store');
@@ -265,23 +267,23 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{user}'], function () {
             Route::get('edit', [UsersController::class, 'edit'])->name('edit');
             Route::post('update', [UsersController::class, 'update'])->name('update');
-            Route::get('delete', [UsersController::class, 'delete'])->name('delete');
+            Route::post('delete', [UsersController::class, 'delete'])->name('delete');
         });
     });
     
        // Product Variation Routes
-    Route::group(['prefix' => 'variations', 'as' => 'variation.'], function () {
+    Route::group(['prefix' => 'variations', 'as' => 'variation.', 'middleware' => 'permission:manage-products'], function () {
         Route::get('/', [ProductVariationController::class, 'index'])->name('index');
         Route::get('create', [ProductVariationController::class, 'create'])->name('create');
         Route::post('store', [ProductVariationController::class, 'store'])->name('store');
         Route::get('product/{product:id}/edit', [ProductVariationController::class, 'edit'])->name('edit');
         Route::post('product/{product:id}/update', [ProductVariationController::class, 'update'])->name('update');
-        Route::match(['get', 'post'], '{variation}/delete', [ProductVariationController::class, 'delete'])->name('delete');
+        Route::post('{variation}/delete', [ProductVariationController::class, 'delete'])->name('delete');
     });
 
 
     // invoice Management Routes
-    Route::group(['prefix' => 'invoices', 'as' => 'invoice.'], function () {
+    Route::group(['prefix' => 'invoices', 'as' => 'invoice.', 'middleware' => 'permission:manage-orders'], function () {
         Route::get('/', [InvoiceManagementController::class, 'index'])->name('index');
         Route::get('/create', [InvoiceManagementController::class, 'create'])->name('create');
         Route::post('/store', [InvoiceManagementController::class, 'store'])->name('store');
@@ -294,21 +296,21 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
             Route::get('/create-invoice', [InvoiceManagementController::class, 'createInvoice'])->name('createInvoice');
             Route::get('/edit-invoice', [InvoiceManagementController::class, 'editInvoice'])->name('editInvoice');
             Route::post('/update-invoice', [InvoiceManagementController::class, 'UpdateInvoice'])->name('updateInvoice');
-            Route::get('/send-invoice-mail-to-customer', [InvoiceManagementController::class, 'CustomerMail'])->name('customer.invoice.mail');
+            Route::post('/send-invoice-mail-to-customer', [InvoiceManagementController::class, 'CustomerMail'])->name('customer.invoice.mail');
             Route::get('edit', [InvoiceManagementController::class, 'edit'])->name('edit');
             Route::post('update', [InvoiceManagementController::class, 'update'])->name('update');
-            Route::get('delete', [InvoiceManagementController::class, 'delete'])->name('delete');
+            Route::post('delete', [InvoiceManagementController::class, 'delete'])->name('delete');
         });
     });
 
     // Price Match Routes
-    Route::group(['prefix' => 'prices', 'as' => 'price.'], function () {
+    Route::group(['prefix' => 'prices', 'as' => 'price.', 'middleware' => 'permission:manage-queries'], function () {
         Route::get('/', [PriceMatchController::class, 'index'])->name('index');
 
     });
 
     // Product Categories Management Routes
-    Route::group(['prefix' => 'categories', 'as' => 'category.'], function () {
+    Route::group(['prefix' => 'categories', 'as' => 'category.', 'middleware' => 'permission:manage-categories'], function () {
         Route::get('/', [ProductCategoryController::class, 'index'])->name('index');
         Route::get('/create', [ProductCategoryController::class, 'create'])->name('create');
         Route::post('/store', [ProductCategoryController::class, 'store'])->name('store');
@@ -316,21 +318,23 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{category}'], function () {
             Route::get('edit', [ProductCategoryController::class, 'edit'])->name('edit');
             Route::post('update', [ProductCategoryController::class, 'update'])->name('update');
-            Route::get('delete', [ProductCategoryController::class, 'delete'])->name('delete');
+            Route::post('delete', [ProductCategoryController::class, 'delete'])->name('delete');
         });
     });
 
     // Blog Management Routes
-    Route::group(['prefix' => 'blogs', 'as' => 'blog.'], function () {
+    Route::group(['prefix' => 'blogs', 'as' => 'blog.', 'middleware' => 'permission:manage-blogs'], function () {
         Route::get('/', [BlogController::class, 'index'])->name('index');
         Route::get('/create', [BlogController::class, 'create'])->name('create');
         Route::post('/store', [BlogController::class, 'store'])->name('store');
         Route::get('/blog-description', [BlogController::class, 'BlogDescription'])->name('description');
 
-        Route::group(['prefix' => '{blog}'], function () {
+        // Admin blog links use the id: some blogs have an empty slug, which
+        // produced broken URLs like dashboard/blogs//delete.
+        Route::group(['prefix' => '{blog:id}'], function () {
             Route::get('edit', [BlogController::class, 'edit'])->name('edit');
             Route::post('update', [BlogController::class, 'update'])->name('update');
-            Route::get('delete', [BlogController::class, 'delete'])->name('delete');
+            Route::post('delete', [BlogController::class, 'delete'])->name('delete');
         });
     });
 
@@ -338,7 +342,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
 
 
     // Product Management Routes
-    Route::group(['prefix' => 'products', 'as' => 'product.'], function () {
+    Route::group(['prefix' => 'products', 'as' => 'product.', 'middleware' => 'permission:manage-products'], function () {
         Route::get('/', [ProductManagementController::class, 'index'])->name('index');
         Route::get('/create', [ProductManagementController::class, 'create'])->name('create');
         Route::post('/store', [ProductManagementController::class, 'store'])->name('store');
@@ -347,14 +351,14 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{product}'], function () {
             Route::get('edit', [ProductManagementController::class, 'edit'])->name('edit');
             Route::post('update', [ProductManagementController::class, 'update'])->name('update');
-            Route::get('delete', [ProductManagementController::class, 'delete'])->name('delete');
+            Route::post('delete', [ProductManagementController::class, 'delete'])->name('delete');
         });
         Route::post('/{slug}/{id}', [ProductManagementController::class, 'deleteMedia'])->name('media.delete');
     });
 
 
     // cbd Product Routes
-    Route::group(['prefix' => 'populars', 'as' => 'popular.'], function () {
+    Route::group(['prefix' => 'populars', 'as' => 'popular.', 'middleware' => 'permission:manage-products'], function () {
         Route::get('/', [CbdController::class, 'index'])->name('index');
         Route::get('/create', [CbdController::class, 'create'])->name('create');
         Route::post('/store', [CbdController::class, 'store'])->name('store');
@@ -363,12 +367,12 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{product}'], function () {
             Route::get('edit', [CbdController::class, 'edit'])->name('edit');
             Route::post('update', [CbdController::class, 'update'])->name('update');
-            Route::get('delete', [CbdController::class, 'delete'])->name('delete');
+            Route::post('delete', [CbdController::class, 'delete'])->name('delete');
         });
     });
 
     // CBD Product Categories Management Routes
-    Route::group(['prefix' => 'cbdcategories', 'as' => 'cbdcategory.'], function () {
+    Route::group(['prefix' => 'cbdcategories', 'as' => 'cbdcategory.', 'middleware' => 'permission:manage-categories'], function () {
         Route::get('/', [CbdCategoryController::class, 'index'])->name('index');
         Route::get('/create', [CbdCategoryController::class, 'create'])->name('create');
         Route::post('/store', [CbdCategoryController::class, 'store'])->name('store');
@@ -376,12 +380,12 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{cbdcategory}'], function () {
             Route::get('edit', [CbdCategoryController::class, 'edit'])->name('edit');
             Route::post('update', [CbdCategoryController::class, 'update'])->name('update');
-            Route::get('delete', [CbdCategoryController::class, 'delete'])->name('delete');
+            Route::post('delete', [CbdCategoryController::class, 'delete'])->name('delete');
         });
     });
 
     //   NewsLetter
-    Route::group(['prefix' => 'newsletters', 'as' => 'newsletter.'], function () {
+    Route::group(['prefix' => 'newsletters', 'as' => 'newsletter.', 'middleware' => 'permission:manage-marketing'], function () {
         Route::get('/', [NewsLetterController::class, 'index'])->name('index');
 
     });
@@ -389,14 +393,14 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
 
 
     //   Setting
-    Route::group(['prefix' => 'contacts', 'as' => 'contact.'], function () {
+    Route::group(['prefix' => 'contacts', 'as' => 'contact.', 'middleware' => 'permission:manage-settings'], function () {
         Route::get('/', [ContactController::class, 'index'])->name('index');
         Route::post('/store', [ContactController::class, 'store'])->name('store');
 
     });
 
     // Query
-    Route::group(['prefix' => 'queries', 'as' => 'query.'], function () {
+    Route::group(['prefix' => 'queries', 'as' => 'query.', 'middleware' => 'permission:manage-queries'], function () {
         Route::get('/', [QueryController::class, 'index'])->name('index');
         Route::group(['prefix' => '{order}'], function () {
             Route::get('view', [QueryController::class, 'viewOrder'])->name('view');
@@ -405,7 +409,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
     });
 
 
-    Route::group(['prefix' => 'settings', 'as' => 'setting.'], function () {
+    Route::group(['prefix' => 'settings', 'as' => 'setting.', 'middleware' => 'permission:manage-settings'], function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::post('store', [SettingController::class, 'store'])->name('store');
 
@@ -415,7 +419,7 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
     });
 
  //   Orders (Original Orders)
-    Route::group(['prefix' => 'old-orders', 'as' => 'order.'], function () {
+    Route::group(['prefix' => 'old-orders', 'as' => 'order.', 'middleware' => 'permission:manage-orders'], function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/export-orders', [OrderController::class, 'export'])->name('export');
         Route::get('getorderdetail', [OrderController::class, 'OrderDetail'])->name('Orderdetail');
@@ -423,19 +427,19 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
             Route::get('edit', [OrderController::class, 'OrderStatus'])->name('edit');
             Route::get('view', [OrderController::class, 'viewOrder'])->name('view');
             Route::post('update', [OrderController::class, 'OrderStatusSave'])->name('update');
-            Route::get('delete', [OrderController::class, 'delete'])->name('delete');
+            Route::post('delete', [OrderController::class, 'delete'])->name('delete');
         });
     });
 
     
     // Orders (Variation Quote Orders - New Module)
-    Route::group(['prefix' => 'orders', 'as' => 'orders.'], function () {
+    Route::group(['prefix' => 'orders', 'as' => 'orders.', 'middleware' => 'permission:manage-orders'], function () {
         Route::get('/', [VariationQuoteController::class, 'index'])->name('index');
         Route::get('/{id}/view', [VariationQuoteController::class, 'show'])->name('view');
     });
 
     // Testimonial  Routes
-    Route::group(['prefix' => 'testimonials', 'as' => 'testimonial.'], function () {
+    Route::group(['prefix' => 'testimonials', 'as' => 'testimonial.', 'middleware' => 'permission:manage-reviews'], function () {
         Route::get('/', [TestimonialController::class, 'index'])->name('index');
         Route::get('/create', [TestimonialController::class, 'create'])->name('create');
         Route::post('/store', [TestimonialController::class, 'store'])->name('store');
@@ -443,12 +447,12 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::group(['prefix' => '{testimonial}'], function () {
             Route::get('edit', [TestimonialController::class, 'edit'])->name('edit');
             Route::post('update', [TestimonialController::class, 'update'])->name('update');
-            Route::get('delete', [TestimonialController::class, 'delete'])->name('delete');
+            Route::post('delete', [TestimonialController::class, 'delete'])->name('delete');
         });
     });
 
     // Google Reviews Routes
-    Route::group(['prefix' => 'google-reviews', 'as' => 'google-reviews.'], function () {
+    Route::group(['prefix' => 'google-reviews', 'as' => 'google-reviews.', 'middleware' => 'permission:manage-reviews'], function () {
         Route::get('/', [GoogleReviewController::class, 'index'])->name('index');
         Route::post('/store', [GoogleReviewController::class, 'store'])->name('store');
         Route::post('/fetch', [GoogleReviewController::class, 'fetchReviews'])->name('fetch');
@@ -459,14 +463,14 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
     });
 
     // Google Reviews Scraper Routes
-    Route::group(['prefix' => 'google-reviews-scraper', 'as' => 'google-reviews-scraper.'], function () {
+    Route::group(['prefix' => 'google-reviews-scraper', 'as' => 'google-reviews-scraper.', 'middleware' => 'permission:manage-reviews'], function () {
         Route::get('/', [GoogleReviewsScraperController::class, 'index'])->name('index');
         Route::post('/fetch', [GoogleReviewsScraperController::class, 'fetchReviews'])->name('fetch');
         Route::get('/get-reviews', [GoogleReviewsScraperController::class, 'getReviews'])->name('get-reviews');
     });
 
     // Google Maps Data API Routes
-    Route::group(['prefix' => 'google-maps-data', 'as' => 'google-maps-data.'], function () {
+    Route::group(['prefix' => 'google-maps-data', 'as' => 'google-maps-data.', 'middleware' => 'permission:manage-reviews'], function () {
         Route::get('/debugger', function() {
             return view('admin.google-maps-data.debugger');
         })->name('debugger');
@@ -476,28 +480,8 @@ Route::group(['namespace' => 'backend', 'as' => 'dashboard.', 'prefix' => 'dashb
         Route::get('/raw-data', [GoogleMapsDataController::class, 'getRawData'])->name('raw-data');
     });
 
-    // Google Search Indexing (bulk URL submission) Routes
-    Route::group(['prefix' => 'google-indexing', 'as' => 'google-indexing.'], function () {
-        Route::get('/', [GoogleIndexingController::class, 'index'])->name('index');
-        Route::post('/settings', [GoogleIndexingController::class, 'saveSettings'])->name('settings');
-        Route::get('/credentials/delete', [GoogleIndexingController::class, 'deleteCredentials'])->name('credentials.delete');
-        Route::post('/test', [GoogleIndexingController::class, 'testConnection'])->name('test');
-        Route::post('/collect', [GoogleIndexingController::class, 'collect'])->name('collect');
-        Route::post('/submit', [GoogleIndexingController::class, 'submit'])->name('submit');
-        Route::post('/status', [GoogleIndexingController::class, 'status'])->name('status');
-        Route::post('/clear-logs', [GoogleIndexingController::class, 'clearLogs'])->name('clear-logs');
-    });
 
 });
-
-// Public routes for Google Maps data (no authentication required)
-Route::get('/api/google-maps-data/raw-data', [GoogleMapsDataController::class, 'getRawData'])->name('api.google-maps-data.raw-data');
-Route::get('/google-maps-data/raw-data-viewer', function() {
-    return view('admin.google-maps-data.raw-data-viewer');
-})->name('public.google-maps-data.raw-data-viewer');
-
-// Public cron job route for Google Reviews
-Route::get('/admin/google-reviews/cron-fetch', [GoogleReviewController::class, 'cronFetch'])->name('admin.google-reviews.cron-fetch');
 
 // Review detail page route
 Route::get('/review/{id}', [App\Http\Controllers\frontend\ReviewController::class, 'show'])->name('review.detail');
@@ -512,7 +496,7 @@ Route::get('/git-pull', [DeployController::class, 'pullFromDashboard'])
 
 Route::middleware(['schemaOrg'])->group(function() {
     Route::get('/', [indexController::class, 'index'])->name('index');
-    Route::post('order', [PagesController::class, 'StoreOrder'])->name('order.store');
+    Route::post('order', [PagesController::class, 'StoreOrder'])->middleware('throttle:10,10')->name('order.store');
     Route::get('thank-you', [PagesController::class, 'ThankYou'])->name('thankyou');
 
     Route::get('blog', [PagesController::class, 'BlogPage'])->name('blog.page');
@@ -521,23 +505,25 @@ Route::middleware(['schemaOrg'])->group(function() {
     Route::get('privacy-policy', [PagesController::class, 'SecurityAndPrivacy'])->name('SecurityAndPrivacy');
     Route::get('terms-of-services', [PagesController::class, 'TermsAndCondition'])->name('termsAndCondition');
     Route::get('refund-policy', [PagesController::class, 'refundPolicy'])->name('refundPolicy');
+    Route::get('return-policy', [PagesController::class, 'ReturnPolicy'])->name('returnPolicy');
+    Route::get('shipping-policy', [PagesController::class, 'ShippingPolicy'])->name('shippingPolicy');
     Route::get('contact-us', [PagesController::class, 'ContactUs'])->name('contactUs');
     Route::get('frequently-asked-questions', [PagesController::class, 'FAQ'])->name('faq');
     Route::get('checkout', [PagesController::class, 'GetQuote'])->name('get.quote');
     Route::get('get-quotes', [PagesController::class, 'GetQuotepage'])->name('get.quotes');
 
-    Route::post('save-contact', [PagesController::class, 'StoreContactUs'])->name('store.contact');
-    Route::post('newsletter', [PagesController::class, 'StoreNewsLetter'])->name('newsletter');
+    Route::post('save-contact', [PagesController::class, 'StoreContactUs'])->middleware('throttle:10,10')->name('store.contact');
+    Route::post('newsletter', [PagesController::class, 'StoreNewsLetter'])->middleware('throttle:10,10')->name('newsletter');
     Route::get('all-products', [PagesController::class, 'AllProducts'])->name('allproducts');
 
     Route::get('price-match-challenge', [PagesController::class, 'priceMatch'])->name('price.match');
-    Route::post('save-price-match-challenge', [PagesController::class, 'SavePriceMatchData'])->name('save.price.match');
+    Route::post('save-price-match-challenge', [PagesController::class, 'SavePriceMatchData'])->middleware('throttle:10,10')->name('save.price.match');
 
     Route::get('cart', [PagesController::class, 'QuoteUseAsCart'])->name('cart.quote');;
 
     Route::get('search', [indexController::class, 'Search'])->name('search');
     Route::get('search-page', [indexController::class, 'SearchPage'])->name('searchpage');
-    Route::post('submit-book-a-call', [indexController::class, 'BookCall'])->name('submit.book.call');
+    Route::post('submit-book-a-call', [indexController::class, 'BookCall'])->middleware('throttle:10,10')->name('submit.book.call');
 
 // popular product category
     Route::get('cbd-categories', [PagesController::class, 'PopularCategories'])->name('popularcategories');
@@ -555,9 +541,7 @@ Route::middleware(['schemaOrg'])->group(function() {
     Route::get('box-by-industry/{categorySlug}/{subcategorySlug}', [PagesController::class, 'ProductByCategory'])->name('product.by.category');
 //Route::get('/{slug}',[PagesController::class, 'ProductDetail'])->name('product.detail');
     Route::get('quick-view', [PagesController::class, 'QuickView'])->name('quick.view');
-    Route::get('generate-sitemap', [PagesController::class, 'sitemap'])->name('sitemap.xml');
-    Route::get('storage-link', [PagesController::class, 'storageLink'])->name('storage.link');
-    Route::get('optimize-clear', [PagesController::class, 'OptimizeClear'])->name('optimize.clear');
+    Route::get('generate-sitemap', [PagesController::class, 'sitemap'])->middleware(['auth', 'dashboard', 'permission:generate-sitemap'])->name('sitemap.xml');
 
 
     // Catch-all page renderer. The constraints keep static-asset requests
@@ -573,29 +557,15 @@ Route::middleware(['schemaOrg'])->group(function() {
 });
 
 
-Route::post('/quill/image-upload', [QuillImageController::class, 'upload'])->name('quill.image.upload');
-Route::post('/text-editor/image-upload', [EditorImageController::class, 'upload'])->name('editor.image.upload');
-
-
-
-
-
-Route::get('/storage-link', function () {
-    try {
-        Artisan::call('storage:link');
-        return response()->json(['status' => 'success', 'message' => 'Storage link created successfully']);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to create storage link',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+Route::middleware(['auth', 'dashboard'])->group(function () {
+    Route::post('/quill/image-upload', [QuillImageController::class, 'upload'])->name('quill.image.upload');
+    Route::post('/text-editor/image-upload', [EditorImageController::class, 'upload'])->name('editor.image.upload');
 });
 
-Route::get('/test', function () {
-    dd('test');
-});
+
+
+
+
 
 
 Route::get('/storage/{id}/{conversion}/{filename}', function ($id, $conversion, $filename) {
@@ -609,6 +579,4 @@ Route::get('/storage/{id}/{conversion}/{filename}', function ($id, $conversion, 
     
     return response()->file($path);
 })->name('media.show');
-
-
 

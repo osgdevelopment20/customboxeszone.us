@@ -36,6 +36,11 @@ class PriceMatchMail extends Mailable
         //   $info= json_decode($price_match->info);
           
         
-        return $this->view('mail.price-match-mail',compact('price_match','info'));
+        if (filter_var($price_match->email, FILTER_VALIDATE_EMAIL)) {
+            $this->replyTo($price_match->email);
+        }
+
+        return $this->subject('New Price Match Request - ' . ($price_match->name ?: $price_match->email))
+            ->view('mail.price-match-mail',compact('price_match','info'));
     }
 }

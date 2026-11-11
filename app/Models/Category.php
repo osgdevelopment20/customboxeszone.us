@@ -9,12 +9,19 @@ use Spatie\Image\Manipulations;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Traits\RestrictsMediaToImages;
 
 class Category extends Model implements HasMedia
 {
-    use HasFactory, Sluggable, InteractsWithMedia;
+    use HasFactory, Sluggable, InteractsWithMedia, RestrictsMediaToImages;
 
     protected $fillable = ['title'];
+
+    public function registerMediaCollections(): void
+    {
+        $this->imageCollection('category_img');
+        $this->imageCollection('homepage');
+    }
 
 
     public function registerMediaConversions(Media $media = null): void

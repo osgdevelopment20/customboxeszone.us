@@ -34,6 +34,7 @@ class UpdateBlogRequest extends FormRequest
             'author_name' => 'required',
             'blog_ldis' => 'required',
             'slug' => 'required',
+            'blog_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
         ];
     }
 

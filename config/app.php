@@ -56,7 +56,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'to_mail' => env('MAIL_TO_ADDRESS', 'osgdevelopment20@gmail.com'),
+    // Inbox that receives every lead/order notification. Falls back to the
+    // site's own sending address, never to a third party.
+    'to_mail' => env('MAIL_TO_ADDRESS', env('MAIL_FROM_ADDRESS')),
 
     'asset_url' => env('ASSET_URL'),
 

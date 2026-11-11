@@ -79,7 +79,34 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
+        // A malformed multipart body gets parsed into a single field holding the raw
+        // "Content-Disposition" parts, which then shows up in the site header.
+        $noRawMultipart = function ($attribute, $value, $fail) {
+            if (is_string($value) && stripos($value, 'Content-Disposition:') !== false) {
+                $fail('The ' . str_replace('_', ' ', $attribute) . ' field contains invalid form data.');
+            }
+        };
+
+        $shortField = ['nullable', 'string', 'max:255', $noRawMultipart];
+
+        $rules = [
+            'phone' => ['nullable', 'string', 'max:50', $noRawMultipart],
+            'email' => ['nullable', 'email', 'max:255'],
+            'address' => $shortField,
+            'facebook' => $shortField,
+            'linkedin' => $shortField,
+            'instagram' => $shortField,
+            'youtube' => $shortField,
+            'x' => $shortField,
+            'pinterest' => $shortField,
+        ];
+
+        foreach (array_keys($request->except(array_keys($rules))) as $key) {
+            $rules[$key] = [$noRawMultipart];
+        }
+
+        $request->validate($rules);
+
         $this->saveSetting($request->all());
         Cache::flush();
         return redirect()->back()->with('success', 'Setting Saved Successfully!');

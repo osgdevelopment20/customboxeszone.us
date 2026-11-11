@@ -39,10 +39,12 @@
                     <span class="widget-title wow fadeIn animated">Quick Links</span>
                     <ul class="footer-list wow fadeIn animated mb-sm-5 mb-md-0">
                         <li><a title="About Us" href="{{ route('aboutUs') }}">About Us</a></li>
+                        <li><a title="Contact Us" href="{{ route('contactUs') }}">Contact Us</a></li>
                         <li><a title="Privacy Policy" href="{{ route('SecurityAndPrivacy') }}">Privacy Policy</a></li>
                         <li><a title="Refund Policy" href="{{ route('refundPolicy') }}">Refund Policy</a></li>
+                        <li><a title="Return Policy" href="{{ route('returnPolicy') }}">Return Policy</a></li>
+                        <li><a title="Shipping Policy" href="{{ route('shippingPolicy') }}">Shipping Policy</a></li>
                         <li><a title="Terms &amp; Conditions" href="{{ route('termsAndCondition') }}">Terms &amp; Conditions</a></li>
-                        <li><a title="Contact Us" href="{{ route('contactUs') }}">Contact Us</a></li>
                         <li><a title="Blogs" href="{{ route('blog.page') }}">Blogs</a></li>
                     </ul>
                 </div>

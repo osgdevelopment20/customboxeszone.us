@@ -10,6 +10,7 @@ use App\Services\CartService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Livewire\Concerns\ThrottlesSubmissions;
 use Livewire\Component;
 
 /**
@@ -17,7 +18,7 @@ use Livewire\Component;
  */
 class CheckoutPage extends Component
 {
-    use DetectsVisitorLocation;
+    use DetectsVisitorLocation, ThrottlesSubmissions;
 
     public $name;
     public $email;
@@ -65,6 +66,7 @@ class CheckoutPage extends Component
     public function placeOrder(CartService $cart)
     {
         $this->validate();
+        $this->throttleSubmission();
 
         if ($cart->isEmpty()) {
             session()->flash('error', 'Your cart is empty.');

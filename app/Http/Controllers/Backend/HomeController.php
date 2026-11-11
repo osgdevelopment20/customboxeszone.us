@@ -32,20 +32,28 @@ class HomeController extends Controller
     }
     public function EditProfile($id)
     {
-//        $user_id =auth()->user()->id;
-        $profile = User::Where('id',$id)->first();
+        // Users may only edit their own profile; other accounts are managed under Users.
+        abort_unless((int) $id === auth()->id(), 403);
+
+        $profile = auth()->user();
         return view('backend.profile.edit',compact('profile'));
     }
 
     public function UpdateProfile(Request $request ,User $profile)
 
     {
+        abort_unless($profile->id === auth()->id(), 403);
 
-        $profile-> name = $request->name;
-        $profile-> email = $request->email;
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $profile->id,
+        ]);
+
+        $profile-> name = $data['name'];
+        $profile-> email = $data['email'];
         $profile->save();
 
-        return redirect()->route('admin.profile.page')->with('success','Profile is updated');
+        return redirect()->route('dashboard.profile.page')->with('success','Profile is updated');
 
     }
 
@@ -58,7 +66,10 @@ class HomeController extends Controller
    public function UpdatePassword(Request $request)
     {
 
-        $data=$request->all();
+        $data = $request->validate([
+            'current_pwd' => 'required|string',
+            'new_pwd' => 'required|string|min:8',
+        ]);
 
         $check_password=User::where(['email'=>Auth::user()->email])->first();
 
@@ -67,7 +78,7 @@ class HomeController extends Controller
             $password = bcrypt($data['new_pwd']);
             User::where('id',$check_password->id)->update(['password'=>$password]);
 
-            return redirect()->route('admin.profile.page')->with('success', 'Update password Successfully');
+            return redirect()->route('dashboard.profile.page')->with('success', 'Update password Successfully');
 
         } else {
 

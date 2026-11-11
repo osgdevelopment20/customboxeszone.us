@@ -43,9 +43,11 @@
                             <li class="nav-item">
                                 <a href="{{route('dashboard.user.index')}}" class="nav-link {{request()->routeIs('dashboard.user.*') ? 'active': ''}}" data-key="t-analytics">Users</a>
                             </li>
+                            @can('manage-roles')
                             <li class="nav-item">
                                 <a href="{{route('dashboard.role.index')}}" class="nav-link {{request()->routeIs('dashboard.role.*') ? 'active': ''}}" data-key="t-analytics">Roles</a>
                             </li>
+                            @endcan
                             @can('manage-permissions')
                             <li class="nav-item">
                                 <a href="{{route('dashboard.permission.index')}}" class="nav-link {{request()->routeIs('dashboard.permission.*') ? 'active': ''}}" data-key="t-analytics">Permissions</a>
@@ -84,9 +86,11 @@
                     </a>
                     <div class="collapse {{request()->routeIs('dashboard.category.*') || request()->routeIs('dashboard.product.*') || request()->routeIs('dashboard.variation.*')  ? 'show':''}} menu-dropdown" id="productManagement">
                         <ul class="nav nav-sm flex-column">
+                            @can('manage-categories')
                             <li class="nav-item ">
                                 <a href="{{route('dashboard.category.index')}}" class="nav-link {{request()->routeIs('dashboard.category.index')  ? 'active': ''}}" data-key="t-analytics">Category</a>
                             </li>
+                            @endcan
                             <li class="nav-item ">
                                 <a href="{{route('dashboard.product.index')}}" class="nav-link {{request()->routeIs('dashboard.product.*') && !request()->routeIs('dashboard.variation.*') ? 'active': ''}}" data-key="t-analytics">Products</a>
                             </li>
@@ -125,18 +129,20 @@
                     </a>
                 </li>
                 @endcan
+                @can('manage-orders')
                  <li class="nav-item">
                     <a class="nav-link menu-link {{request()->routeIs('dashboard.cart-orders.*')  ? 'active': ''}}" href="{{route('dashboard.cart-orders.index')}}">
                         <i class="ri-shopping-cart-2-line"></i> <span data-key="t-widgets">Cart Orders</span>
                     </a>
                 </li>
-                
+
                    <li class="nav-item">
                     <a class="nav-link menu-link {{request()->routeIs('dashboard.orders.*')  ? 'active': ''}}" href="{{route('dashboard.orders.index')}}">
                         <i class="ri-luggage-cart-line"></i> <span data-key="t-widgets">Orders</span>
                     </a>
                 </li>
-                
+                @endcan
+
                 @can('manage-settings')
                 <li class="nav-item">
                     <a class="nav-link menu-link {{request()->routeIs('dashboard.setting.*')  ? 'active': ''}}" href="{{route('dashboard.setting.index')}}">
@@ -174,27 +180,19 @@
 
                 @can('generate-sitemap')
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{request()->routeIs('dashboard.google-indexing.*')  ? 'active': ''}}" href="{{route('dashboard.google-indexing.index')}}">
-                        <i class="ri-google-line"></i> <span data-key="t-widgets">Google Indexing API</span>
-                    </a>
-                </li>
-                @endcan
-
-                @can('generate-sitemap')
-                <li class="nav-item">
                     <a class="nav-link menu-link" target="_blank" href="{{route('sitemap.xml')}}">
                         <i class="ri-honour-line"></i> <span data-key="t-widgets">Generate Sitemap</span>
                     </a>
                 </li>
                 @endcan
                 
-       
+                @can('clear-cache')
                 <li class="nav-item">
                     <a class="nav-link menu-link" target="_blank" href="{{route('fix.cache')}}">
                         <i class="ri-honour-line"></i> <span data-key="t-widgets">Clear Website Cache</span>
                     </a>
                 </li>
-        
+                @endcan
                 
                 @can('pull-code')
                 <li class="nav-item">

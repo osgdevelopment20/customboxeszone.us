@@ -1,2 +1,4 @@
 User-agent: *
 Disallow:
+
+sitemap: https://customboxeszone.com/sitemap.xml

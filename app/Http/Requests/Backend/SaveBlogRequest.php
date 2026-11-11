@@ -28,7 +28,7 @@ class SaveBlogRequest extends FormRequest
             'title' => ['required', Rule::unique('blogs')],
             'author_name' => 'required',
             'blog_ldis' => 'required',
-            'blog_image' => 'required',
+            'blog_image' => 'required|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
             'meta_title' => ['required', 'max:120'],
             'meta_description' => ['required', 'max:160'],
         ];

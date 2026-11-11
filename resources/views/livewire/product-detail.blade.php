@@ -65,7 +65,7 @@
                                 <div class="container">
                                     <div class="row mb-20">
                                         <div class="col-12">
-                                            <h3 class="section-title style-1 mb-20">Standard Sizes & Estimated Prices</h3>
+                                            <h3 class="section-title style-1 mb-20">Standard Sizes & Quote Options</h3>
                                         </div>
                                     </div>
 
@@ -116,7 +116,7 @@
                                                             </div>
                                                              <div class="text-center mt-3">
                                                                 <button type="button" class="btn btn-primary get-quote-btn" data-bs-toggle="modal" data-bs-target="#variationQuoteModal">
-                                                                    <i class="fi-rs-shopping-cart me-2"></i>Order Now
+                                                                    <i class="fi-rs-shopping-cart me-2"></i>Request Quote
                                                                 </button>
                                                             </div>
                                                         </div>

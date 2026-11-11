@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -32,7 +33,8 @@ class QuoteMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            subject: 'Quote Mail',
+            subject: 'New Quote Request - ' . ($this->quote->name ?: $this->quote->email),
+            replyTo: filter_var($this->quote->email, FILTER_VALIDATE_EMAIL) ? [new Address($this->quote->email)] : [],
         );
     }
 
@@ -43,7 +45,7 @@ class QuoteMail extends Mailable
      */
     public function content()
     {
-        $other_products = json_decode($this->quote->otherproduct);
+        $other_products = json_decode($this->quote->other_products ?? '');
         $artDesign = json_decode($this->quote->art_design);
         return new Content(
             markdown: 'emails.quote',

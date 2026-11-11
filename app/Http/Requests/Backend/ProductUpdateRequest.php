@@ -32,6 +32,10 @@ class ProductUpdateRequest extends FormRequest
             'meta_title' => 'required',
             'meta_description' => 'required',
             'slug' => 'required',
+            'product_front_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
+            'product_back_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
+            'product_multiple_images.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
+            'client_story.*.image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
 
         ];
     }

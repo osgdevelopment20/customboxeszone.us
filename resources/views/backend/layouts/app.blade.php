@@ -73,6 +73,31 @@
     </div>
 
     @include('backend.partials.scripts')
+    <script>
+        // Delete routes only accept POST (with the CSRF token), so a link a third
+        // party plants elsewhere cannot delete anything. Turn clicks on existing
+        // ".../delete" links into a POST form submit. Runs after inline
+        // onclick="return confirm(...)", which cancels by preventing default.
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest('a[href]');
+            if (!link || event.defaultPrevented) return;
+
+            var url = new URL(link.href, window.location.href);
+            if (url.origin !== window.location.origin || !/\/delete$/.test(url.pathname)) return;
+
+            event.preventDefault();
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url.href;
+            var token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(token);
+            document.body.appendChild(form);
+            form.submit();
+        });
+    </script>
     @stack('scripts')
   
     @livewireScripts

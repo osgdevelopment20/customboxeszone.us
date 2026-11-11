@@ -7,10 +7,12 @@ use App\Mail\QuoteMail;
 use App\Models\Quote;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Livewire\Concerns\ThrottlesSubmissions;
 use Livewire\Component;
 
 class GetQuoteStepForm extends Component
 {
+    use ThrottlesSubmissions;
 
 
     public $name;
@@ -74,6 +76,7 @@ class GetQuoteStepForm extends Component
     public function saveQuote()
     {
         $this->validate();
+        $this->throttleSubmission();
         try {
             $quote = new Quote();
             $quote->name = $this->name;

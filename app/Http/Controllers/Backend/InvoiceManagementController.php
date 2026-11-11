@@ -170,7 +170,9 @@ class InvoiceManagementController extends Controller
         try {
             Mail::to($customer_invoice_mail->customer->email)->send(new CustomerInvoice($customer_invoice_mail));
         } catch (\Exception $exception) {
-            Log::error($exception->getMessage());
+            Log::error('Invoice email failed: ' . $exception->getMessage());
+
+            return redirect()->back()->with('error', 'The invoice email could not be sent. Check the mail settings and try again.');
         }
 
         return redirect()->back()->with('success','Mail Has Been send Successfully to the customer');

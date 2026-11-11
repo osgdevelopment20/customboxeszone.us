@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\CartOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -34,6 +35,7 @@ class OrderPlacedMail extends Mailable
     {
         return new Envelope(
             subject: 'New Order ' . $this->order->order_number,
+            replyTo: filter_var($this->order->email, FILTER_VALIDATE_EMAIL) ? [new Address($this->order->email)] : [],
         );
     }
 

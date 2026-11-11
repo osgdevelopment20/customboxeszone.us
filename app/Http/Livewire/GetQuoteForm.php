@@ -8,12 +8,13 @@ use App\Models\Quote;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Livewire\Concerns\ThrottlesSubmissions;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class GetQuoteForm extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, ThrottlesSubmissions;
 
     public $name;
     public $email;
@@ -142,6 +143,7 @@ class GetQuoteForm extends Component
     public function saveQuote()
     {
         $this->validate();
+        $this->throttleSubmission();
         try {
             $quote = new Quote();
             $quote->name = $this->name;
@@ -177,10 +179,10 @@ class GetQuoteForm extends Component
                 $artworkPaths = [];
                 foreach ($this->art_design as $file) {
                     try {
-                        $fileName = rand(99999, 9999999);
-                        $extension = $file->getClientOriginalExtension();
-                        $filePath = $file->storeAs('artwork', $fileName . '.' . $extension, 'public');
-                        $artworkPaths[] = $filePath;
+                        $filePath = store_artwork_upload($file);
+                        if ($filePath) {
+                            $artworkPaths[] = $filePath;
+                        }
                     } catch (\Exception $e) {
                         Log::error('File upload failed: ' . $e->getMessage());
                         continue;

@@ -22,11 +22,22 @@
                                 </div>
                             </div>
                             <div class="single-content">
-                                {!! sys_settings('refund_policy') !!}
+                                {!! merchant_policy_content('refund_policy', '
+                                    <p>Because custom packaging is manufactured to each customer\'s approved specifications, refund and return eligibility depends on the order status and the nature of the issue.</p>
+                                    <h2>Before Production</h2>
+                                    <p>If production has not started, contact us immediately and we will review whether the order can be changed or cancelled.</p>
+                                    <h2>After Production</h2>
+                                    <p>Custom printed or custom sized packaging cannot usually be returned for a preference change after production has started or the order has shipped.</p>
+                                    <h2>Damaged, Defective, or Incorrect Orders</h2>
+                                    <p>If your order arrives damaged, defective, or materially different from the approved proof, contact us within 3 business days with your order details and photos. We will review the issue and may offer a replacement, remake, credit, or refund depending on the circumstances.</p>
+                                    <h2>How To Contact Us</h2>
+                                    <p>Email ' . merchant_contact_email() . ' or call ' . merchant_contact_phone() . ' for refund or return help.</p>
+                                ') !!}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+        @include('frontend.includes.merchant-transparency')
     @endsection

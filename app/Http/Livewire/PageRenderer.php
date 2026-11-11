@@ -10,7 +10,6 @@ use Artesaos\SEOTools\Facades\SEOTools;
 use Artesaos\SEOTools\Facades\TwitterCard;
 use Illuminate\Support\Facades\Log;
 use Spatie\SchemaOrg\Schema;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use DateTime;
 
 class PageRenderer extends Component
@@ -135,10 +134,6 @@ class PageRenderer extends Component
             }
 
             abort(404);
-        } catch (HttpExceptionInterface $e) {
-            // Our own abort() calls land here: an unknown slug is an ordinary
-            // 404, not an application error, so it must not be logged.
-            throw $e;
         } catch (\Exception $e) {
             Log::error('Error in PageRenderer', [
                 'message' => $e->getMessage(),
@@ -156,14 +151,20 @@ class PageRenderer extends Component
 
     private function categoryToSubCategory()
     {
-        return Category::with(['media', 'categories'])
+        return Category::with(['media', 'categories' => fn ($query) => $query->active()])
+            ->active()
             ->where('slug', $this->slug)
             ->where('parent_id', 0)
             ->first();
     }
     private function subCategoryToProducts()
     {
-        return Category::with(['media', 'products', 'procategories'])
+        return Category::with([
+                'media',
+                'products' => fn ($query) => $query->active(),
+                'procategories',
+            ])
+            ->active()
             ->where('slug', $this->slug)
             ->whereNotNull('parent_id')
             ->first();
@@ -171,6 +172,7 @@ class PageRenderer extends Component
     private function products()
     {
         return Product::with(['media', 'category', 'variations.media'])
+            ->active()
             ->where('slug', $this->slug)
             ->first();
     }
@@ -178,7 +180,7 @@ class PageRenderer extends Component
     {
         $relatedProductIds = json_decode($product->related_products) ?: [];
         return !empty($relatedProductIds)
-            ? Product::whereIn('id', $relatedProductIds)->get()
+            ? Product::active()->whereIn('id', $relatedProductIds)->get()
             : collect([]);
     }
     private function getFaqsProducts($product)

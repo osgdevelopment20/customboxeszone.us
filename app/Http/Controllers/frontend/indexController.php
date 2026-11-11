@@ -37,12 +37,12 @@ class indexController extends Controller
             $search = $request->input('query');
 
             $results = Product::query()
-                ->where("product_name", "LIKE", "%{$search}%")->with('media')->get();
+                ->where("product_name", "LIKE", "%{$search}%")->limit(20)->get();
 
             $output = '<ul class="dropdown-menu " style="display: block;position: absolute;left: 0; max-height: 280px;overflow-x: auto;">';
             foreach ($results as $product) {
 
-                $output .= '<li><a href="' . route('page', $product->slug) . '" class="dropdown-item"  style="text-decoration: none; color:#088178;">' . $product->product_name . '</a></li><br>';
+                $output .= '<li><a href="' . route('page', $product->slug) . '" class="dropdown-item"  style="text-decoration: none; color:#088178;">' . e($product->product_name) . '</a></li><br>';
             }
             $output .= '</ul>';
             echo $output;

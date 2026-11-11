@@ -27,6 +27,8 @@ class ProductCategoryUpdateRequest extends FormRequest
 
             'title' => 'required',
             'name' => 'required',
+            'category_img' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
+            'homepage_img' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,avif|max:10240',
         ];
     }
 

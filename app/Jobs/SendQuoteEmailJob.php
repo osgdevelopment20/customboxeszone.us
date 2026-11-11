@@ -32,6 +32,6 @@ class SendQuoteEmailJob implements ShouldQueue
      */
     public function handle()
     {
-        Mail::to('quote@cusotmboxeszone.com')->send(new QuoteMail( $this->quote ));
+        Mail::to(config('app.to_mail'))->send(new QuoteMail( $this->quote ));
     }
 }

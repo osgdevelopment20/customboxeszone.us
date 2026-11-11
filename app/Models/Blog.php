@@ -10,10 +10,11 @@ use Spatie\Image\Manipulations;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Traits\RestrictsMediaToImages;
 
 class Blog extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Sluggable;
+    use HasFactory, InteractsWithMedia, RestrictsMediaToImages, Sluggable;
 
 
     public function sluggable(): array
@@ -27,7 +28,7 @@ class Blog extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('blog_image')->singleFile();
+        $this->imageCollection('blog_image')->singleFile();
     }
 
     public function registerMediaConversions(Media $media = null): void

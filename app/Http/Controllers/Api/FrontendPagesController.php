@@ -391,7 +391,7 @@ class FrontendPagesController extends Controller
         {
             try {
 
-                Mail::to('quote@cusotmboxeszone.com')->send(new OrderMail($order));
+                Mail::to(config('app.to_mail'))->send(new OrderMail($order));
 
             } catch (\Exception $exception) {
 
@@ -435,7 +435,7 @@ class FrontendPagesController extends Controller
         $quote->save();
         try {
 
-            Mail::to('quote@cusotmboxeszone.com')->send(new QuoteMail($quote));
+            Mail::to(config('app.to_mail'))->send(new QuoteMail($quote));
 
         } catch (\Exception $exception) {
             Log::error($exception->getMessage());

@@ -5,7 +5,8 @@
             <div>
                 <h1 class="cbz-page__title">All Products</h1>
                 <p class="cbz-page__subtitle">
-                    Browse our full packaging range, pick a box, set your size and quantity — then add it to your cart.
+                    Browse our full packaging range, pick a box, set your size and quantity — then request a custom quote.
+                    Final price, shipping, and production time are confirmed before payment.
                 </p>
             </div>
         </div>
@@ -82,18 +83,18 @@
         </div>
 
         <div class="cbz-resultbar">
-            <p wire:loading.remove wire:target="search,categoryId,sort,selectCategory,clearFilters,gotoPage,nextPage,previousPage">
-                Showing <strong>{{ $products->count() }}</strong> of
-                <strong>{{ number_format($products->total()) }}</strong> products
+            <p wire:loading.remove wire:target="search,categoryId,sort,selectCategory,clearFilters">
+                Showing <strong>{{ number_format($products->count()) }}</strong> of
+                <strong>{{ number_format($total) }}</strong> products
                 @if ($selectedCategory) in <strong>{{ $selectedCategory->name }}</strong> @endif
             </p>
-            <p wire:loading wire:target="search,categoryId,sort,selectCategory,clearFilters,gotoPage,nextPage,previousPage">
+            <p wire:loading wire:target="search,categoryId,sort,selectCategory,clearFilters">
                 <span class="cbz-spinner" aria-hidden="true"></span> Loading products…
             </p>
         </div>
 
         {{-- Products --}}
-        @if ($products->total() === 0)
+        @if ($total === 0)
             <div class="cbz-empty">
                 <div class="cbz-empty__icon" aria-hidden="true"><i class="fi-rs-search"></i></div>
                 <h2 class="cbz-empty__title">No products found</h2>
@@ -127,16 +128,27 @@
                                 <a href="{{ route('page', $product->slug) }}">{{ $product->product_name }}</a>
                             </h3>
                             <a href="{{ route('page', $product->slug) }}" class="cbz-prod__cta">
-                                Configure &amp; Order <i class="fi-rs-arrow-small-right" aria-hidden="true"></i>
+                                Configure &amp; Quote <i class="fi-rs-arrow-small-right" aria-hidden="true"></i>
                             </a>
                         </div>
                     </article>
                 @endforeach
             </div>
 
-            <div class="cbz-pagination">
-                {{ $products->onEachSide(1)->links() }}
-            </div>
+            @if ($products->count() < $total)
+                <div class="cbz-loadmore">
+                    <button type="button" class="cbz-btn cbz-btn--primary" wire:click="loadMore"
+                            wire:loading.attr="disabled" wire:target="loadMore">
+                        <span wire:loading.remove wire:target="loadMore">
+                            Load more products
+                            <small>({{ number_format($total - $products->count()) }} more)</small>
+                        </span>
+                        <span wire:loading wire:target="loadMore">
+                            <span class="cbz-spinner" aria-hidden="true"></span> Loading…
+                        </span>
+                    </button>
+                </div>
+            @endif
         @endif
 
     </div>

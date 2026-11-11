@@ -1261,6 +1261,16 @@
 
 /* Bootstrap's CSS is not loaded on the front end, so the pagination markup
    Livewire renders needs its full layout defined here. */
+.cbz-loadmore {
+    display: flex;
+    justify-content: center;
+    margin-top: 34px;
+}
+
+.cbz-loadmore .cbz-btn { min-width: 240px; }
+
+.cbz-loadmore small { font-weight: 500; opacity: .8; }
+
 .cbz-pagination { margin-top: 34px; }
 
 .cbz-pagination .pagination {

@@ -45,7 +45,7 @@ class QuoteDataTable extends BaseDataTable
             $action .= '</div>';
             return $action;
 
-        })->rawColumns(['action','view_product']);
+        })->rawColumns(['action']);
 
 
 

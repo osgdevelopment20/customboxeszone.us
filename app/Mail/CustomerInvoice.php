@@ -32,6 +32,7 @@ class CustomerInvoice extends Mailable
 
         $customer_invoice_mail = $this->customer_invoice_mail;
 //        dd($customer_invoice_mail);
-        return $this->view('mail.invoice-mail',compact('customer_invoice_mail'));
+        return $this->subject('Your invoice from ' . config('app.name'))
+            ->view('mail.invoice-mail',compact('customer_invoice_mail'));
     }
 }

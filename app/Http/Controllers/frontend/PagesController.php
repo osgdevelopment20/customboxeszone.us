@@ -49,9 +49,7 @@ class PagesController extends Controller
             $this->addDynamicUrls();
             // Generate and save the image sitemap
             $this->generateImageSitemap();
-            // Generate and save the Google Merchant feed
             $this->generateGoogleMerchantFeed();
-            // Generate and save the Google Local Merchant feed
             $this->generateGoogleMerchantLocalFeed();
 
             return view('frontend.pages.sitemap');
@@ -76,14 +74,15 @@ class PagesController extends Controller
             ->add(Url::create(route('faq'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
             ->add(Url::create(route('search'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
             ->add(Url::create(route('allcategories'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
-            ->add(Url::create(route('refundPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
+            ->add(Url::create(route('refundPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY))
+            ->add(Url::create(route('shippingPolicy'))->setLastModificationDate(Carbon::today())->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
 
         // Add products
         $items = Product::active()->select(['slug', 'updated_at'])->get();
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('page', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
@@ -93,7 +92,7 @@ class PagesController extends Controller
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('page', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
@@ -103,12 +102,17 @@ class PagesController extends Controller
         foreach ($items as $item) {
             $sitemap->add(
                 Url::create(route('blog.detail', $item->slug))
-                    ->setLastModificationDate(new DateTime($item->updated_at))
+                    ->setLastModificationDate($this->lastModifiedDate($item->updated_at))
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             );
         }
 
         $sitemap->writeToFile(public_path('sitemap.xml'));
+    }
+
+    private function lastModifiedDate($value): DateTime
+    {
+        return new DateTime($value ?: 'now');
     }
 
     private function generateImageSitemap()
@@ -155,97 +159,242 @@ class PagesController extends Controller
         \File::put(public_path('images-sitemap.xml'), $xmlContent);
     }
 
+// Replace your existing generateGoogleMerchantFeed() in PagesController with
+// everything below (constant + 4 methods).
+//
+// Imports needed at the top of the controller:
+//   use App\Models\Category;
+//   use App\Models\Product;
+
+    /**
+     * Categories (by slug) that must never appear in the Google Merchant feed:
+     * Google Shopping does not allow drug, tobacco or vape related products.
+     * Child categories of these are excluded automatically.
+     */
+    private const MERCHANT_EXCLUDED_CATEGORY_SLUGS = [
+        'cbd-boxes',
+        'cigarette-boxes',
+        'pre-roll-packaging',
+        'custom-cannabis-packaging',
+        'delta-8-packaging',
+    ];
+
+    /**
+     * Safety net: any category or product whose name, title or slug contains one
+     * of these as a whole word is excluded too. Whole words only, so
+     * "Foldable" (dab) or "Hempstead" (hemp) are not caught.
+     */
+    /**
+     * Individual products to keep out of the feed by id, for borderline items
+     * the word list cannot judge (e.g. Mylar bags named after cannabis strains).
+     */
+    private const MERCHANT_EXCLUDED_PRODUCT_IDS = [];
+
+    private const MERCHANT_EXCLUDED_PATTERN = '/\\b('
+        . 'cbd|thc|delta|cannabis|marijuana|marihuana|hemp|weed|kush|kratom|dispensary'
+        . '|vapes?|vaping|vaporizers?|e[\\s-]?liquids?|e[\\s-]?juices?|tinctures?'
+        . '|tobacco|cigars?|cigarettes?|cigarillos?|nicotine|hookahs?|shisha'
+        . '|pre[\\s-]?rolls?|joints?|blunts?|dabs?|rolling[\\s-]papers?'
+        . '|hash|bidis?|shrooms?|psilocybin|mushroom[\\s-]chocolates?|concentrates?'
+        // cannabis retail weights: 3.5g, 7 gram, 14g, 28 grams, half ounce, eighth
+        . '|(?:3\\.5|7|14|28)\\s?(?:g|grams?)|half[\\s-]ounce|eighths?'
+        . ')\\b/i';
+
+    /**
+     * Google product taxonomy id for every item: "Office Supplies > Shipping
+     * Supplies". Without it Google guesses from the title, so "Men Shorts
+     * Packaging" was classed as clothing and flagged for missing colour,
+     * gender, age group and size.
+     */
+    private const MERCHANT_GOOGLE_CATEGORY = '2636';
 
     private function generateGoogleMerchantFeed()
     {
-        // Fetch products with required attributes and their associated media
-        $items = Product::with('media')->active()->select(['id', 'product_title', 'product_detail', 'slug'])->get();
+        $currency    = config('app.currency', 'USD');
+        $excludedIds = $this->merchantExcludedCategoryIds();
 
-        // Start building the XML content
-        $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>
-         <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
-         <channel>
-            <title>' . htmlspecialchars(sys_settings('site_meta_title')) . '</title>
-            <link>' . config('app.url') . '</link>
-            <description>' . htmlspecialchars(sys_settings('site_meta_description')) . '</description>';
+        \Log::info('Merchant feed: excluded category ids = ' . json_encode($excludedIds));
 
-        // Loop through each product and add it to the feed
-        foreach ($items as $item) {
-            // Remove HTML tags and convert HTML entities to plain text
-            // Limit to 500 chars to prevent blog-style content
-            $plainTextDescription = html_entity_decode(strip_tags($item->product_detail));
-            $plainTextDescription = mb_substr($plainTextDescription, 0, 500);
+        $categoryNames = Category::pluck('name', 'id');
+        $categoryParents = Category::pluck('parent_id', 'id');
 
-            $xmlContent .= '
-            <item>
-            <g:id>' . $item->id . '</g:id>
-            <g:title>' . htmlspecialchars($item->product_title) . '</g:title>
-            <g:description>' . htmlspecialchars($plainTextDescription) . '</g:description>
-            <g:link>' . htmlspecialchars(route('page', $item->slug)) . '</g:link>
-            <g:image_link>' . htmlspecialchars($item->media->first()->getUrl()) . '</g:image_link>';
+        $products = Product::with(['media', 'variations', 'category'])
+            ->active()
+            // 1) Skip products attached to an excluded category (or its children)
+            ->when($excludedIds, function ($q) use ($excludedIds) {
+                $q->whereDoesntHave('category', function ($c) use ($excludedIds) {
+                    $c->whereIn('categories.id', $excludedIds);
+                });
+            })
+            ->orderBy('id')
+            ->get()
+            // 2) Skip products whose name, title, slug or meta description (the
+            //    feed's description) names a restricted product. The long page
+            //    copy is not checked: it often lists CBD among many industries
+            //    served, and matching it dropped ~290 ordinary boxes.
+            ->reject(fn ($product) => in_array($product->id, self::MERCHANT_EXCLUDED_PRODUCT_IDS) || $this->isMerchantRestricted(
+                $product->product_name,
+                $product->product_title,
+                $product->slug,
+                $product->meta_description
+            ));
 
-            // Add additional images if available
-            if ($item->media->count() > 1) {
-                foreach ($item->media->slice(1) as $media) {
-                    $xmlContent .= '
-            <g:additional_image_link>' . htmlspecialchars($media->getUrl()) . '</g:additional_image_link>';
-                }
+        \Log::info('Merchant feed: ' . $products->count() . ' products after restricted-product filtering');
+
+        $skipped = ['no_image' => 0];
+
+        $xml = new \XMLWriter();
+        $xml->openMemory();
+        $xml->setIndent(true);
+        $xml->startDocument('1.0', 'UTF-8');
+
+        $xml->startElement('rss');
+        $xml->writeAttribute('version', '2.0');
+        $xml->writeAttribute('xmlns:g', 'http://base.google.com/ns/1.0');
+
+        $xml->startElement('channel');
+        $xml->writeElement('title', sys_settings('site_meta_title', config('app.name')));
+        $xml->writeElement('link', config('app.url'));
+        $xml->writeElement('description', 'Product feed for ' . config('app.name'));
+
+        foreach ($products as $product) {
+            $price = $this->merchantPrice($product);
+
+            $images = $this->merchantImages($product);
+            if ($images->isEmpty()) {
+                $skipped['no_image']++;
+                continue;
             }
 
-            $xmlContent .= '
-            <g:condition>new</g:condition>
-            <g:availability>in stock</g:availability>
-            <g:price>1.50 USD</g:price>
-            <g:brand>' . htmlspecialchars(config('app.name')) . '</g:brand>
-            <g:google_product_category>Business &amp; Industrial &gt; Packaging Materials &gt; Boxes</g:google_product_category>
-            <g:identifier_exists>no</g:identifier_exists>
-            <g:shipping>
-              <g:country>US</g:country>
-              <g:service>Standard Shipping</g:service>
-              <g:price>0 USD</g:price>
-            </g:shipping>
-          </item>';
+            $description = trim(preg_replace(
+                '/\s+/',
+                ' ',
+                strip_tags((string) ($product->description ?: $product->meta_description ?: $product->product_name))
+            ));
+
+            $xml->startElement('item');
+            $xml->writeElement('g:id', (string) $product->id);
+            $xml->writeElement('g:title', mb_substr($product->product_name, 0, 150));
+            $xml->writeElement('g:description', mb_substr($description, 0, 5000));
+            $xml->writeElement('g:link', route('page', $product->slug));
+            $xml->writeElement('g:image_link', $images->first());
+
+            foreach ($images->slice(1, 10) as $extra) {
+                $xml->writeElement('g:additional_image_link', $extra);
+            }
+
+            $xml->writeElement('g:availability', 'in stock');
+            $xml->writeElement('g:condition', 'new');
+            $xml->writeElement('g:price', number_format($price, 2, '.', '') . ' ' . $currency);
+            $xml->writeElement('g:brand', config('app.name'));
+            $xml->writeElement('g:identifier_exists', 'no');
+            $xml->writeElement('g:google_product_category', self::MERCHANT_GOOGLE_CATEGORY);
+
+            // product_type: the site's own category path, e.g. "Apparel Packaging > Clothing Packaging".
+            if ($category = $product->category->first()) {
+                $path = [$category->name];
+                $parentId = $categoryParents[$category->id] ?? 0;
+                if ($parentId && isset($categoryNames[$parentId])) {
+                    array_unshift($path, $categoryNames[$parentId]);
+                }
+                $xml->writeElement('g:product_type', mb_substr(implode(' > ', $path), 0, 750));
+            }
+            $xml->endElement(); // item
         }
 
-          // Close the XML content
-           $xmlContent .= '
-          </channel>
-         </rss>';
+        $xml->endElement(); // channel
+        $xml->endElement(); // rss
+        $xml->endDocument();
 
-        // Save the Google Merchant feed to the public directory
-        \File::put(public_path('google-merchant-feed.xml'), $xmlContent);
+        \Log::info('Merchant feed: fetched ' . $products->count() . ', skipped ' . json_encode($skipped));
+
+        \File::put(public_path('google-merchant-feed.xml'), $xml->outputMemory());
+    }
+
+    /**
+     * IDs of the excluded categories plus all of their nested children.
+     */
+    private function merchantExcludedCategoryIds(): array
+    {
+        $ids = Category::get(['id', 'name', 'slug'])
+            ->filter(fn ($category) => in_array($category->slug, self::MERCHANT_EXCLUDED_CATEGORY_SLUGS, true)
+                || $this->isMerchantRestricted($category->name, $category->slug))
+            ->pluck('id')
+            ->all();
+
+        $frontier = $ids;
+        while (!empty($frontier)) {
+            $children = Category::whereIn('parent_id', $frontier)
+                ->pluck('id')
+                ->diff($ids)
+                ->values()
+                ->all();
+
+            $ids      = array_merge($ids, $children);
+            $frontier = $children;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * True when any of the given texts names a product Google Shopping refuses.
+     * Slugs and file names use hyphens/underscores, so those are read as spaces.
+     */
+    private function isMerchantRestricted(...$texts): bool
+    {
+        $text = str_replace(['-', '_'], ' ', implode(' ', array_filter($texts)));
+
+        return (bool) preg_match(self::MERCHANT_EXCLUDED_PATTERN, $text);
+    }
+
+    /**
+     * Placeholder price: pseudo-random per product, but stable between runs
+     * (derived from the product id), so it doesn't change every time /sitemap loads.
+     * Range: MERCHANT_PRICE_MIN to MERCHANT_PRICE_MAX.
+     */
+    private const MERCHANT_PRICE_MIN = 0.80;
+    private const MERCHANT_PRICE_MAX = 1.50;
+
+    private function merchantPrice($product): float
+    {
+        $min   = (int) round(self::MERCHANT_PRICE_MIN * 100);
+        $max   = (int) round(self::MERCHANT_PRICE_MAX * 100);
+        $cents = $min + (crc32('merchant-price-' . $product->id) % ($max - $min + 1));
+
+        return $cents / 100;
+    }
+
+    /**
+     * Front image first, then gallery images (original files, deduplicated).
+     */
+    private function merchantImages($product)
+    {
+        // Only S3 images: a handful of July 2026 uploads are recorded on the local
+        // disk but the files are gone, so their links would 404 at Google.
+        return $product->getMedia('product_front_image')
+            ->concat($product->getMedia('product_gallery'))
+            ->unique('id')
+            ->where('disk', 's3')
+            // Drop images named after restricted products, e.g. a city page whose
+            // gallery holds "Cannabis-Boxes-Clifton.png".
+            ->reject(fn ($m) => $this->isMerchantRestricted($m->file_name, $m->name))
+            ->map(fn ($m) => $m->getUrl())
+            ->filter()
+            ->values();
     }
 
     private function generateGoogleMerchantLocalFeed()
     {
-        // Fetch products with minimal required attributes
-        $items = Product::active()->select(['id'])->get();
-
-        // Start building the XML content
         $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>
          <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
            <channel>
           ' . '<title>' . htmlspecialchars(config('app.name') . ' | Local Inventory') . '</title>
             <link>' . htmlspecialchars(config('app.url')) . '</link>
-             <description>' . htmlspecialchars('Local inventory feed for ' . config('app.name') . ' stores in USA') . '</description>';
-
-        // Loop through each product and add it to the feed
-        foreach ($items as $item) {
-            $xmlContent .= '
-        <item>
-            <g:id>' . $item->id . '</g:id>
-            <g:store_code>UB-USA</g:store_code>
-            <g:availability>in stock</g:availability>
-            <g:price>1.50 USD</g:price>
-        </item>';
-        }
-
-        // Close the XML content
-        $xmlContent .= '
+             <description>' . htmlspecialchars('Local inventory feed disabled until accurate local inventory prices are available.') . '</description>
     </channel>
 </rss>';
 
-        // Save the Local feed to the public directory
         \File::put(public_path('google-merchant-local-feed.xml'), $xmlContent);
     }
 
@@ -902,6 +1051,22 @@ class PagesController extends Controller
         return view('frontend.pages.refund-policy');
     }
 
+    public function ReturnPolicy()
+    {
+        return redirect()->route('refundPolicy', status: 301);
+    }
+
+    public function ShippingPolicy()
+    {
+        $this->seoMetaData(
+            sys_settings('shipping_policy_meta_title', 'Shipping Policy | ' . config('app.name')),
+            sys_settings('shipping_policy_meta_description', 'Shipping timelines, production handling, delivery areas, and freight notes for custom packaging orders.'),
+            sys_settings('meta_site_keywords'),
+            route('shippingPolicy')
+        );
+        return view('frontend.pages.shipping-policy');
+    }
+
     public function ContactUs()
     {
         $this->seoMetaData(
@@ -1142,7 +1307,7 @@ class PagesController extends Controller
 
                 $order->save();
                 try {
-                    Mail::to('quote@cusotmboxeszone.com')->send(new OrderMail($order));
+                    Mail::to(config('app.to_mail'))->send(new OrderMail($order));
                 } catch (\Exception $exception) {
                     Log::error($exception->getMessage());
                 }
@@ -1272,7 +1437,7 @@ class PagesController extends Controller
 
             try {
 
-                Mail::to('quote@cusotmboxeszone.com')->send(new PriceMatchMail($price_match));
+                Mail::to(config('app.to_mail'))->send(new PriceMatchMail($price_match));
             } catch (\Exception $exception) {
 
                 Log::error($exception->getMessage());
@@ -1374,4 +1539,3 @@ class PagesController extends Controller
 
 
 }
-

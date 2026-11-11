@@ -6,10 +6,13 @@ use App\Models\VariationQuote;
 use App\Mail\VariationQuoteMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Http\Livewire\Concerns\ThrottlesSubmissions;
 use Livewire\Component;
 
 class VariationQuoteForm extends Component
 {
+    use ThrottlesSubmissions;
+
     public $name;
     public $email;
     public $phone;
@@ -77,6 +80,7 @@ class VariationQuoteForm extends Component
     public function submit()
     {
         $validatedData = $this->validate();
+        $this->throttleSubmission();
 
         $variationQuote = VariationQuote::create([
             'name' => $this->name,
@@ -90,7 +94,7 @@ class VariationQuoteForm extends Component
 
         // Send email notification
         try {
-            Mail::to('quote@cusotmboxeszone.com')->send(new VariationQuoteMail($variationQuote));
+            Mail::to(config('app.to_mail'))->send(new VariationQuoteMail($variationQuote));
         } catch (\Exception $e) {
             // Log error but don't stop the process
             Log::error('Failed to send variation quote email: ' . $e->getMessage());

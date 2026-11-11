@@ -33,7 +33,12 @@ class OrderMail extends Mailable
     {
         $order = $this->order;
         $other_products = json_decode($order->otherproduct);
-        return $this->markdown('mail.order-mail')
+        if (filter_var($order->email, FILTER_VALIDATE_EMAIL)) {
+            $this->replyTo($order->email);
+        }
+
+        return $this->subject('New Order Request - ' . ($order->name ?: $order->email))
+            ->markdown('mail.order-mail')
             ->with([
                 'order' => $order,
                 'otherProducts' => $other_products,

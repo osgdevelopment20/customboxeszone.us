@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <figure class="single-thumbnail">
-                        <img title="{{ $blog->title }}" src="{{ asset('blogs/'.$blog->blog_image) }}" alt="{{$blog->blog_img_title  }}">
+                        <img title="{{ $blog->title }}" src="{{ $blog->blog_image_url }}" alt="{{$blog->blog_img_title  }}">
                     </figure>
                     <div class="single-content">
                        {!! $blog->blog_ldis !!}

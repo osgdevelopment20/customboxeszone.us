@@ -1,0 +1,23 @@
+# User uploads only (served at /storage via the storage:link symlink).
+# Nothing in here may ever run as code or render as a web page.
+
+Options -Indexes
+
+# Undo the PHP handler inherited from public_html/.htaccess.
+<IfModule mime_module>
+    RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar .phps .shtml
+    RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar .phps
+</IfModule>
+
+# Refuse to serve script-like and HTML files at all.
+<FilesMatch "(?i)\.(php\d?|phtml|pht|phar|phps|shtml?|cgi|pl|py|sh|html?|xhtml|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    # SVG/XML opened directly cannot run scripts. <img src> use is unaffected.
+    <FilesMatch "(?i)\.(svgz?|xml)$">
+        Header always set Content-Security-Policy "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+    </FilesMatch>
+</IfModule>

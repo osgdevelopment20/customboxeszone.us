@@ -82,8 +82,9 @@ class OrderDataTable extends BaseDataTable
 
             })
             ->editColumn('view_product', function ($order) {
-                if ($order->product_url){
-                    return '<a  target="_blank" href="'.$order->product_url.'"> View Product </a>';
+                // product_url comes from the public order form: only allow real web links.
+                if ($order->product_url && preg_match('#^https?://#i', $order->product_url)){
+                    return '<a  target="_blank" rel="noopener noreferrer" href="'.e($order->product_url).'"> View Product </a>';
                 }
             })
 

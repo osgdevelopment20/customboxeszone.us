@@ -29,11 +29,12 @@
                                 </div>
                             </div>
                             <div class="single-content">
-                                {!! sys_settings('terms_and_condition') !!}
+                                {!! merchant_policy_content('terms_and_condition') !!}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+        @include('frontend.includes.merchant-transparency')
     @endsection

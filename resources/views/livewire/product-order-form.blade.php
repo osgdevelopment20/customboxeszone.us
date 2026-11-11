@@ -2,7 +2,7 @@
     <div class="cbz-card">
         <div class="cbz-card__head">
             <h2 class="cbz-card__title">Get an Instant Custom Quote</h2>
-            <p class="cbz-card__subtitle">Tell us your size and quantity — we'll price it for you, free of charge.</p>
+            <p class="cbz-card__subtitle">Tell us your size and quantity — we'll price it for you, free of charge. No payment is collected from this form.</p>
         </div>
 
         <div class="cbz-card__body">
@@ -146,6 +146,7 @@
                     <li><i class="fi-rs-check" aria-hidden="true"></i> Free design support</li>
                     <li><i class="fi-rs-check" aria-hidden="true"></i> No die &amp; plate charges</li>
                     <li><i class="fi-rs-check" aria-hidden="true"></i> Response within 24 hours</li>
+                    <li><i class="fi-rs-check" aria-hidden="true"></i> Final price, shipping, and production time confirmed before payment</li>
                 </ul>
             </form>
         </div>
