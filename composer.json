@@ -15,6 +15,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "laravel/ui": "^4.2",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^2.12",
         "maatwebsite/excel": "^3.1",
         "spatie/laravel-medialibrary": "^10.15",
@@ -75,6 +76,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true
+        },
+        "platform": {
+            "php": "8.2.35"
         }
     },
     "minimum-stability": "stable",
