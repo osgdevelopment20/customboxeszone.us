@@ -3,6 +3,7 @@
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -108,7 +109,17 @@ if (! function_exists('store_artwork_upload')) {
             $options['ContentDisposition'] = 'attachment';
         }
 
-        return $file->storeAs($directory, Str::random(40) . '.' . $extension, $options) ?: null;
+        $path = $file->storeAs($directory, Str::random(40) . '.' . $extension, $options);
+
+        // Livewire's storeAs() returns the path even when the S3 write failed,
+        // which left quotes pointing at artwork that was never saved.
+        if (! $path || ! Storage::disk('s3')->exists($path)) {
+            Log::error('Artwork upload to S3 failed', ['path' => $path, 'original_name' => $file->getClientOriginalName()]);
+
+            return null;
+        }
+
+        return $path;
     }
 }
 

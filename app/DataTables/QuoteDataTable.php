@@ -36,6 +36,10 @@ class QuoteDataTable extends BaseDataTable
     })
 
 
+        ->addColumn('artwork', function ($quote) {
+            return $this->artworkLinks($quote->art_design);
+        })
+
         ->addcolumn('action', function ($query) {
             $action = '<div class="dropdown d-inline-block">';
             $action .= '<button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="ri-more-fill align-middle"></i></button>';
@@ -45,10 +49,44 @@ class QuoteDataTable extends BaseDataTable
             $action .= '</div>';
             return $action;
 
-        })->rawColumns(['action']);
+        })->rawColumns(['artwork', 'action']);
 
 
 
+    }
+
+    /**
+     * Thumbnails (images) or file badges (PDF, AI, ...) for a quote's artwork.
+     * Clicking one opens it in a new tab and copies its link (see queries/index).
+     */
+    protected function artworkLinks(?string $artDesign): string
+    {
+        $files = array_values(array_filter((array) json_decode((string) $artDesign, true), 'is_string'));
+
+        if (! $files) {
+            return '<span class="text-muted">-</span>';
+        }
+
+        $images = ['jpg', 'jpeg', 'jfif', 'png', 'gif', 'webp', 'avif', 'svg'];
+        $html = '<div class="cbz-artwork">';
+
+        foreach (array_slice($files, 0, 3) as $file) {
+            $url = e(upload_url($file));
+            $name = e(basename($file));
+            $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+            $html .= '<a href="' . $url . '" target="_blank" rel="noopener" class="cbz-artwork__item js-copy-artwork" title="Open and copy link: ' . $name . '">';
+            $html .= in_array($extension, $images, true)
+                ? '<img src="' . $url . '" alt="' . $name . '" loading="lazy" onerror="this.parentNode.classList.add(\'is-missing\')">'
+                : '<span class="cbz-artwork__file">' . e(strtoupper($extension ?: 'file')) . '</span>';
+            $html .= '<span class="cbz-artwork__missing">missing</span></a>';
+        }
+
+        if (count($files) > 3) {
+            $html .= '<span class="cbz-artwork__more">+' . (count($files) - 3) . ' more</span>';
+        }
+
+        return $html . '</div>';
     }
 
     /**
@@ -118,6 +156,12 @@ class QuoteDataTable extends BaseDataTable
             'phone'        => ['data' => 'phone', 'name' => 'phone'],
             'email'        => ['data' => 'email', 'name' => 'email'],
             'order_at'        => ['data' => 'order_at', 'name' => 'order_at'],
+            Column::computed('artwork')
+                ->title('Artwork')
+                ->exportable(false)
+                ->printable(false)
+                ->orderable(false)
+                ->searchable(false),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
