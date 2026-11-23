@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class QuillImageController extends Controller
 {
@@ -16,8 +17,8 @@ class QuillImageController extends Controller
             'image' => 'file|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
         ]);
 
-        $path = $request->file('image')->store('quill-images', 'public');
+        $path = $request->file('image')->store('quill-images', 's3');
 
-        return response()->json(['url' => asset('storage/' . $path)]);
+        return response()->json(['url' => Storage::disk('s3')->url($path)]);
     }
 }

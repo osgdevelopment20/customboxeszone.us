@@ -33,6 +33,7 @@ use App\Http\Controllers\Backend\InvoiceManagementController;
 use App\Http\Livewire\PageRenderer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HomeController as Home;
 use App\Http\Controllers\QuillImageController;
@@ -567,6 +568,15 @@ Route::middleware(['auth', 'dashboard'])->group(function () {
 
 
 
+
+// Upload folders moved to S3 (php artisan uploads:migrate-to-s3). The web server
+// serves files still present locally; this only runs for ones already moved,
+// so old links (e.g. in sent emails or saved pages) keep working.
+Route::get('/storage/{folder}/{file}', function ($folder, $file) {
+    return redirect()->away(Storage::disk('s3')->url("{$folder}/{$file}"), 301);
+})->where('folder', 'artwork|client_stories|editor-images|quill-images')
+  ->where('file', '[A-Za-z0-9._-]+')
+  ->name('uploads.s3-redirect');
 
 Route::get('/storage/{id}/{conversion}/{filename}', function ($id, $conversion, $filename) {
     $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($id);

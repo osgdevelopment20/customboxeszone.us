@@ -128,10 +128,10 @@ class Product extends Model implements HasMedia
             $media = $mediaId ? $mediaById->get($mediaId) : null;
 
  //dd($mediaId,$media,$story);
-            // Fall back to legacy s3 path for stories not yet migrated into the media library.
+            // Older stories keep a plain path ("client_stories/x.jpg"): local until migrated, then S3.
             $image = $media
                 ? $media->getUrl()
-                : (!empty($story['image']) ? Storage::disk('public')->url($story['image']) : '');
+                : upload_url($story['image'] ?? null);
                 
             return [
                 'description' => $story['description'] ?? '',

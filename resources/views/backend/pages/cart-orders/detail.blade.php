@@ -144,7 +144,7 @@
                                                 <td>
                                                     @if (!empty($item->artwork))
                                                         @foreach ($item->artwork as $file)
-                                                            <a href="{{ asset('storage/' . $file) }}" target="_blank"
+                                                            <a href="{{ upload_url($file) }}" target="_blank"
                                                                rel="noopener" class="d-block">
                                                                 <i class="ri-attachment-2 align-middle me-1"></i>{{ basename($file) }}
                                                             </a>

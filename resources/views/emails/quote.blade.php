@@ -34,7 +34,7 @@
 @if($artDesign)
 ## Art Design Files
 @foreach($artDesign as $art)
-- [{{ basename($art) }}]({{ asset('storage/' . $art) }})
+- [{{ basename($art) }}]({{ upload_url($art) }})
 @endforeach
 @endif
 

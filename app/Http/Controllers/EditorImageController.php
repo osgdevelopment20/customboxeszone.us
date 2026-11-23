@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class EditorImageController extends Controller
@@ -32,8 +33,8 @@ class EditorImageController extends Controller
         }
 
         // store() names the file from its detected content type, never the client's name.
-        $path = $request->file($field)->store('editor-images', 'public');
-        $url = asset('storage/' . $path);
+        $path = $request->file($field)->store('editor-images', 's3');
+        $url = Storage::disk('s3')->url($path);
 
         // If CKEditor 4 expects a JS callback response
         if ($request->has('CKEditorFuncNum')) {

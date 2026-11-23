@@ -26,7 +26,7 @@
 @if(!empty($item->artwork))
 **Artwork Files:**
 @foreach($item->artwork as $file)
-- [{{ basename($file) }}]({{ asset('storage/' . $file) }})
+- [{{ basename($file) }}]({{ upload_url($file) }})
 @endforeach
 @endif
 

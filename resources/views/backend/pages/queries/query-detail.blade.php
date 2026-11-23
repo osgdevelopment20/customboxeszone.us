@@ -119,7 +119,7 @@
                                         <h6 class="mt-3">Art Work</h6>
                                         <ul>
                                            @foreach(json_decode($order->art_design) as $art)
-                                                <li><a target="_blank" href="{{config('app.url').'/'.'storage/'.$art}}">{{config('app.url').'/'.'storage/'.$art}}</a></li>
+                                                <li><a target="_blank" rel="noopener" href="{{ upload_url($art) }}">{{ basename($art) }}</a></li>
                                             @endforeach
                                         </ul>
                                     @endif

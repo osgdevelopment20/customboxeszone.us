@@ -3,6 +3,7 @@
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 
@@ -83,13 +84,13 @@ if (! function_exists('merchant_policy_content')) {
 
 if (! function_exists('store_artwork_upload')) {
     /**
-     * Store a customer artwork upload on the public disk.
+     * Store a customer artwork upload on S3.
      *
      * The "mimes" validation rule only sniffs file content, so a JPEG/PHP
      * polyglot named "x.pht" passes it. Never reuse the client's extension
      * unless it is on this allow-list, and never reuse the client's filename.
      *
-     * @return string|null Path on the public disk, or null if rejected.
+     * @return string|null Path on S3 (e.g. "artwork/abc.jpg"), or null if rejected.
      */
     function store_artwork_upload(UploadedFile $file, string $directory = 'artwork'): ?string
     {
@@ -100,6 +101,40 @@ if (! function_exists('store_artwork_upload')) {
             return null;
         }
 
-        return $file->storeAs($directory, Str::random(40) . '.' . $extension, 'public') ?: null;
+        $options = ['disk' => 's3'];
+
+        // An SVG opened straight from the bucket must not run scripts.
+        if ($extension === 'svg') {
+            $options['ContentDisposition'] = 'attachment';
+        }
+
+        return $file->storeAs($directory, Str::random(40) . '.' . $extension, $options) ?: null;
+    }
+}
+
+if (! function_exists('upload_url')) {
+    /**
+     * Public URL for an uploaded file stored by relative path ("artwork/abc.jpg",
+     * "client_stories/xyz.webp", "editor-images/...").
+     *
+     * New uploads live on S3. Older ones stay in storage/app/public until
+     * `php artisan uploads:migrate-to-s3 --delete-local` has copied and removed
+     * them, so a file still present locally is served from there.
+     */
+    function upload_url(?string $path): string
+    {
+        if (! $path) {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        $path = ltrim($path, '/');
+
+        return Storage::disk('public')->exists($path)
+            ? Storage::disk('public')->url($path)
+            : Storage::disk('s3')->url($path);
     }
 }
