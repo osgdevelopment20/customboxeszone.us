@@ -50,7 +50,6 @@
                             <li>
                                 <span class="cbz-footer__icon"><i class="fi-rs-marker" aria-hidden="true"></i></span>
                                 <span>
-                                    <span class="cbz-footer__label">{{ count($addresses) > 1 ? 'Address ' . $loop->iteration : 'Address' }}</span>
                                     <a href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($address) }}" target="_blank" rel="noopener">{{ $address }}</a>
                                 </span>
                             </li>
@@ -59,7 +58,6 @@
                             <li>
                                 <span class="cbz-footer__icon"><i class="fi-rs-headset" aria-hidden="true"></i></span>
                                 <span>
-                                    <span class="cbz-footer__label">Phone</span>
                                     <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}">{{ $phone }}</a>
                                 </span>
                             </li>
@@ -68,7 +66,6 @@
                             <li>
                                 <span class="cbz-footer__icon"><i class="fi-rs-envelope" aria-hidden="true"></i></span>
                                 <span>
-                                    <span class="cbz-footer__label">Email</span>
                                     <a href="mailto:{{ $email }}">{{ $email }}</a>
                                 </span>
                             </li>

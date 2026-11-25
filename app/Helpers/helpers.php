@@ -141,9 +141,10 @@ if (! function_exists('upload_url')) {
      * Public URL for an uploaded file stored by relative path ("artwork/abc.jpg",
      * "client_stories/xyz.webp", "editor-images/...").
      *
-     * New uploads live on S3. Older ones stay in storage/app/public until
-     * `php artisan uploads:migrate-to-s3 --delete-local` has copied and removed
-     * them, so a file still present locally is served from there.
+     * New uploads live on S3. Folders that `php artisan uploads:migrate-to-s3`
+     * has confirmed complete (the "uploads_on_s3" setting) always link to S3.
+     * For any other folder a file still present in storage/app/public is
+     * served from there, since it may not have been copied yet.
      */
     function upload_url(?string $path): string
     {
@@ -157,8 +158,12 @@ if (! function_exists('upload_url')) {
 
         $path = ltrim($path, '/');
 
-        return Storage::disk('public')->exists($path)
-            ? Storage::disk('public')->url($path)
-            : Storage::disk('s3')->url($path);
+        $folder = strtok($path, '/');
+
+        if (in_array($folder, (array) sys_settings('uploads_on_s3', []), true) || ! Storage::disk('public')->exists($path)) {
+            return Storage::disk('s3')->url($path);
+        }
+
+        return Storage::disk('public')->url($path);
     }
 }

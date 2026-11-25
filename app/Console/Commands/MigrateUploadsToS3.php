@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Setting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * missing there, because the site falls back to that key once the local file
  * is gone.
  *
+ * Folders that finish without failures are recorded in the "uploads_on_s3"
+ * setting; from then on upload_url() links to S3 for them even while local
+ * copies are still on the server.
+ *
  * Safe to run repeatedly: files already on S3 with the same size are skipped.
  * Local files are only removed with --delete-local, and only when the S3 copy
  * has the same size.
@@ -39,6 +44,9 @@ class MigrateUploadsToS3 extends Command
     protected $description = 'Copy upload folders (artwork, client stories, editor images) from local storage to S3';
 
     public const DEFAULT_DIRS = ['artwork', 'client_stories', 'editor-images', 'quill-images'];
+
+    /** Setting holding the folders confirmed complete on S3 (read by upload_url()). */
+    public const ON_S3_SETTING = 'uploads_on_s3';
 
     /** Real uploads only: anything else (e.g. probe .txt/.html files) is reported and left alone. */
     public const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'jfif', 'png', 'gif', 'webp', 'avif', 'svg', 'pdf', 'ai', 'psd', 'cdr', 'eps'];
@@ -105,11 +113,15 @@ class MigrateUploadsToS3 extends Command
 
         $this->info(($dryRun ? '[DRY RUN] ' : '') . 'Migrating ' . implode(', ', $dirs) . ' to S3 bucket "' . config('filesystems.disks.s3.bucket') . '"');
 
+        $completed = [];
+
         foreach ($dirs as $dir) {
             $this->indexS3($s3, $dir);
+            $failedBefore = $this->stats['failed'];
 
             if (! $local->exists($dir)) {
                 $this->line("  {$dir}: no local folder, nothing to upload");
+                $completed[] = $dir;
                 continue;
             }
 
@@ -128,6 +140,15 @@ class MigrateUploadsToS3 extends Command
                     $this->line('    ...' . ($i + 1) . ' / ' . count($files));
                 }
             }
+
+            // Reached only when the whole folder was processed (an upload limit breaks out above).
+            if ($this->stats['failed'] === $failedBefore) {
+                $completed[] = $dir;
+            }
+        }
+
+        if (! $dryRun && $completed) {
+            $this->markOnS3($completed);
         }
 
         if (! $this->option('skip-urls')) {
@@ -144,6 +165,22 @@ class MigrateUploadsToS3 extends Command
         }
 
         return $this->stats['failed'] > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * Record folders whose every file is confirmed on S3, so links switch to S3.
+     */
+    protected function markOnS3(array $dirs): void
+    {
+        $setting = Setting::firstOrNew(['key' => self::ON_S3_SETTING]);
+        $current = (array) json_decode((string) $setting->value, true);
+        $setting->value = json_encode(array_values(array_unique(array_merge($current, $dirs))));
+        $setting->save();
+
+        Cache::forget('sys_settings');
+        clear_response_cache();
+
+        $this->info('Links now use S3 for: ' . implode(', ', $dirs));
     }
 
     /**
