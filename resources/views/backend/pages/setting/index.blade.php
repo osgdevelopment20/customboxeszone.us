@@ -37,15 +37,20 @@
                                     @enderror
                                 </div>
 
+                                @foreach (['address' => 'Address 1', 'address_2' => 'Address 2', 'address_3' => 'Address 3'] as $addressKey => $addressLabel)
                                 <div class="col-12 mt-3">
-                                    <label for="address" class="form-label">Address</label>
-                                    <input type="text" class="form-control @error('address') is-invalid @enderror"
-                                           id="address" placeholder="Address"
-                                           name="address" value="{{sys_settings('address')}}" >
-                                    @error('address')
+                                    <label for="{{ $addressKey }}" class="form-label">{{ $addressLabel }}</label>
+                                    <input type="text" class="form-control @error($addressKey) is-invalid @enderror"
+                                           id="{{ $addressKey }}" placeholder="{{ $loop->first ? 'Street, City, State ZIP, Country' : 'Optional' }}"
+                                           name="{{ $addressKey }}" value="{{ old($addressKey, sys_settings($addressKey)) }}" maxlength="255">
+                                    @error($addressKey)
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    @if ($loop->last)
+                                        <small class="form-text text-muted">Filled-in addresses are shown in the website footer and the Business Transparency section. Leave a field empty to hide it.</small>
+                                    @endif
                                 </div>
+                                @endforeach
 
                                 <div class="col-12 mt-3">
                                     <label for="facebook" class="form-label">Facebook URL</label>

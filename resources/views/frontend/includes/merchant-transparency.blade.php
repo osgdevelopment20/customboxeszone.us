@@ -17,9 +17,17 @@
                             <a href="mailto:{{ merchant_contact_email() }}">{{ merchant_contact_email() }}</a>
                             or <a href="tel:{{ merchant_contact_phone() }}">{{ merchant_contact_phone() }}</a>.
                         </p>
-                        <p>
-                            Business address: {{ sys_settings('address', 'East Meadow, NY 11554, USA') }}.
-                        </p>
+                        @php($addresses = business_addresses())
+                        @if (count($addresses) === 1)
+                            <p>Business address: {{ $addresses[0] }}.</p>
+                        @elseif (count($addresses) > 1)
+                            <p class="mb-2">Business addresses:</p>
+                            <ul class="mb-3">
+                                @foreach ($addresses as $address)
+                                    <li>{{ $address }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -93,6 +93,8 @@ class SettingController extends Controller
             'phone' => ['nullable', 'string', 'max:50', $noRawMultipart],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => $shortField,
+            'address_2' => $shortField,
+            'address_3' => $shortField,
             'facebook' => $shortField,
             'linkedin' => $shortField,
             'instagram' => $shortField,

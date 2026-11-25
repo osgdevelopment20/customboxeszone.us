@@ -82,6 +82,8 @@
     <link rel="stylesheet" href="{{ asset('assets/css/main.min.css') }}">
     <!-- Cart, checkout, product enquiry and browse screens -->
     <link rel="stylesheet" href="{{ asset('assets/css/cart-checkout.css') }}">
+    <!-- Site footer -->
+    <link rel="stylesheet" href="{{ asset('assets/css/site-footer.css') }}?v={{ filemtime(public_path('assets/css/site-footer.css')) }}">
 
     <!-- Critical CSS with font-display swap and CLS prevention -->
  <style>

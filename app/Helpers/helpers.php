@@ -69,6 +69,19 @@ if (! function_exists('merchant_contact_phone')) {
     }
 }
 
+if (! function_exists('business_addresses')) {
+    /**
+     * Business addresses from Dashboard > Settings (Address 1-3), in order,
+     * leaving out the ones that are empty.
+     */
+    function business_addresses(): array
+    {
+        $addresses = array_map(fn ($key) => trim((string) sys_settings($key)), ['address', 'address_2', 'address_3']);
+
+        return array_values(array_filter($addresses, 'strlen'));
+    }
+}
+
 if (! function_exists('merchant_policy_content')) {
     function merchant_policy_content(string $key, string $fallback = ''): string
     {
